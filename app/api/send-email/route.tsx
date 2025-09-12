@@ -7,6 +7,40 @@ interface EmailRequest {
   configurationId: string
 }
 
+const SENDWITH_API_KEY = "7d4db474cad47167840902714f1dbc8583792fb2c077e935bf21292331776b54"
+const SENDWITH_API_URL = "https://app.sendwith.email/api/send"
+
+async function sendEmailWithSendWith(to: string, subject: string, htmlBody: string, fromName = "MARTELLO 1930") {
+  try {
+    const response = await fetch(SENDWITH_API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${SENDWITH_API_KEY}`,
+      },
+      body: JSON.stringify({
+        to: to,
+        from: `${fromName} <noreply@martello1930.it>`,
+        subject: subject,
+        body: htmlBody,
+      }),
+    })
+
+    if (!response.ok) {
+      const errorData = await response.text()
+      console.error("[v0] SendWith API error:", response.status, errorData)
+      throw new Error(`SendWith API error: ${response.status}`)
+    }
+
+    const result = await response.json()
+    console.log("[v0] Email sent successfully via SendWith:", result)
+    return result
+  } catch (error) {
+    console.error("[v0] Error sending email via SendWith:", error)
+    throw error
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { customerData, configuration, configurationId }: EmailRequest = await request.json()
@@ -16,34 +50,43 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: "Missing required data" }, { status: 400 })
     }
 
+    console.log("[v0] Processing email request for:", customerData.email)
+
     // Generate email content
-    const emailHtml = generateEmailTemplate(customerData, configuration, configurationId)
-
-    // In a real implementation, you would use a service like:
-    // - Resend
-    // - SendGrid
-    // - Nodemailer with SMTP
-    // - AWS SES
-
-    // For demonstration, we'll simulate the email sending
-    console.log("Sending email to:", customerData.email)
-    console.log("Email content:", emailHtml)
-
-    // Simulate email sending delay
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-
-    // Also send notification to admin
+    const customerEmailHtml = generateEmailTemplate(customerData, configuration, configurationId)
     const adminEmailHtml = generateAdminEmailTemplate(customerData, configuration, configurationId)
-    console.log("Sending admin notification to: info@martello1930.it")
-    console.log("Admin email content:", adminEmailHtml)
+
+    const customerEmailResult = await sendEmailWithSendWith(
+      customerData.email,
+      `Richiesta Preventivo Pergola - ID: ${configurationId.slice(0, 8).toUpperCase()}`,
+      customerEmailHtml,
+    )
+
+    const adminEmailResult = await sendEmailWithSendWith(
+      "info@martello1930.it",
+      `🚨 Nuova Richiesta Preventivo - ${customerData.firstName} ${customerData.lastName}`,
+      adminEmailHtml,
+      "Sistema Configuratore",
+    )
+
+    console.log("[v0] Both emails sent successfully")
 
     return NextResponse.json({
       success: true,
-      messageId: `msg_${configurationId.slice(0, 8)}`,
+      messageId: customerEmailResult.id || `msg_${configurationId.slice(0, 8)}`,
+      customerEmail: customerEmailResult,
+      adminEmail: adminEmailResult,
     })
   } catch (error) {
-    console.error("Error sending email:", error)
-    return NextResponse.json({ success: false, error: "Failed to send email" }, { status: 500 })
+    console.error("[v0] Error in email sending process:", error)
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Failed to send email",
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
+      { status: 500 },
+    )
   }
 }
 

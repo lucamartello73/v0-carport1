@@ -2,6 +2,7 @@
 
 import type React from "react"
 import { useRouter } from "next/navigation"
+import { Upload } from "lucide-react"
 
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
@@ -79,6 +80,11 @@ export default function AdminPage() {
   })
 
   const [configDetailsModal, setConfigDetailsModal] = useState({
+    isOpen: false,
+    configuration: null,
+  })
+
+  const [configImageModal, setConfigImageModal] = useState({
     isOpen: false,
     configuration: null,
   })
@@ -196,6 +202,14 @@ export default function AdminPage() {
     setConfigDetailsModal({ isOpen: false, configuration: null })
   }
 
+  const openConfigImageModal = (configuration: any) => {
+    setConfigImageModal({ isOpen: true, configuration })
+  }
+
+  const closeConfigImageModal = () => {
+    setConfigImageModal({ isOpen: false, configuration: null })
+  }
+
   const handleSave = async () => {
     try {
       const endpoint = `/api/admin/${modal.type}s`
@@ -238,6 +252,32 @@ export default function AdminPage() {
       }
     } catch (error) {
       console.error("Error deleting:", error)
+      alert("Errore di connessione")
+    }
+  }
+
+  const handleConfigImageUpload = async (imageUrl: string) => {
+    if (!configImageModal.configuration) return
+
+    try {
+      const response = await fetch("/api/admin/configurations", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: configImageModal.configuration.id,
+          admin_image: imageUrl,
+        }),
+      })
+
+      if (response.ok) {
+        closeConfigImageModal()
+        loadAdminData() // Reload data
+      } else {
+        const error = await response.json()
+        alert(error.error || "Errore durante il salvataggio dell'immagine")
+      }
+    } catch (error) {
+      console.error("Error saving configuration image:", error)
       alert("Errore di connessione")
     }
   }
@@ -400,23 +440,40 @@ export default function AdminPage() {
                   <Card key={config.id}>
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between">
-                        <div className="space-y-2">
-                          <h3 className="text-lg font-semibold text-gray-900">
-                            {config.contact_data?.firstName} {config.contact_data?.lastName}
-                          </h3>
-                          <p className="text-gray-600">
-                            {config.configuratorelegno_pergola_types?.name} - {config.width}x{config.depth}x
-                            {config.height}cm
-                          </p>
-                          <p className="text-sm text-gray-500">
-                            Email: {config.contact_data?.email} | Tel: {config.contact_data?.phone}
-                          </p>
-                          <p className="text-sm text-gray-500">
-                            Servizio: {config.service_type} | Data:{" "}
-                            {new Date(config.created_at).toLocaleDateString("it-IT")}
-                          </p>
+                        <div className="flex items-center space-x-4">
+                          <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center overflow-hidden">
+                            {config.admin_image ? (
+                              <img
+                                src={config.admin_image || "/placeholder.svg"}
+                                alt="Immagine configurazione"
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <Package className="w-8 h-8 text-gray-400" />
+                            )}
+                          </div>
+                          <div className="space-y-2">
+                            <h3 className="text-lg font-semibold text-gray-900">
+                              {config.contact_data?.firstName} {config.contact_data?.lastName}
+                            </h3>
+                            <p className="text-gray-600">
+                              {config.configuratorelegno_pergola_types?.name} - {config.width}x{config.depth}x
+                              {config.height}cm
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              Email: {config.contact_data?.email} | Tel: {config.contact_data?.phone}
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              Servizio: {config.service_type} | Data:{" "}
+                              {new Date(config.created_at).toLocaleDateString("it-IT")}
+                            </p>
+                          </div>
                         </div>
                         <div className="flex items-center space-x-2">
+                          <Button variant="outline" size="sm" onClick={() => openConfigImageModal(config)}>
+                            <Upload className="w-4 h-4 mr-2" />
+                            {config.admin_image ? "Cambia" : "Carica"} Immagine
+                          </Button>
                           <Button variant="outline" size="sm" onClick={() => openConfigDetailsModal(config)}>
                             <Eye className="w-4 h-4 mr-2" />
                             Dettagli
@@ -785,6 +842,29 @@ export default function AdminPage() {
           onClose={closeConfigDetailsModal}
           configuration={configDetailsModal.configuration}
         />
+
+        <Dialog open={configImageModal.isOpen} onOpenChange={closeConfigImageModal}>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>Carica Immagine per Configurazione</DialogTitle>
+              <DialogDescription>Carica un'immagine di riferimento per questa configurazione</DialogDescription>
+            </DialogHeader>
+
+            <div className="py-4">
+              <ImageUpload
+                value={configImageModal.configuration?.admin_image || ""}
+                onChange={handleConfigImageUpload}
+                label="Immagine di Riferimento"
+              />
+            </div>
+
+            <DialogFooter>
+              <Button variant="outline" onClick={closeConfigImageModal}>
+                Chiudi
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </main>
     </div>
   )

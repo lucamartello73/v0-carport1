@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import { Package, Shield, Palette, Settings, User, Phone, Mail, MapPin } from "lucide-react"
+import { Package, Shield, Palette, Settings, User, Phone, Mail, MapPin, ImageIcon } from "lucide-react"
 
 interface ConfigurationDetailsModalProps {
   isOpen: boolean
@@ -139,6 +139,26 @@ export function ConfigurationDetailsModal({ isOpen, onClose, configuration }: Co
                   <p className="text-sm font-medium text-gray-900">Superficie</p>
                   <p className="text-gray-600">{((configuration.width * configuration.depth) / 10000).toFixed(2)} m²</p>
                 </div>
+
+                {configuration.dimensions_data?.image && (
+                  <>
+                    <Separator />
+                    <div>
+                      <p className="text-sm font-medium text-gray-900 flex items-center gap-1 mb-2">
+                        <ImageIcon className="w-3 h-3" />
+                        Immagine di Riferimento
+                      </p>
+                      <div className="border rounded-lg overflow-hidden">
+                        <img
+                          src={configuration.dimensions_data.image || "/placeholder.svg"}
+                          alt="Immagine di riferimento caricata dal cliente"
+                          className="w-full h-48 object-cover"
+                        />
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">Immagine caricata dal cliente per il progetto</p>
+                    </div>
+                  </>
+                )}
               </CardContent>
             </Card>
 

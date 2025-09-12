@@ -1,5 +1,9 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { getConfigurationsServer, deleteConfigurationServer } from "@/lib/admin-database"
+import {
+  getConfigurationsServer,
+  deleteConfigurationServer,
+  updateConfigurationImageServer,
+} from "@/lib/admin-database"
 
 export async function GET() {
   try {
@@ -8,6 +12,23 @@ export async function GET() {
   } catch (error) {
     console.error("Error fetching configurations:", error)
     return NextResponse.json({ error: "Failed to fetch configurations" }, { status: 500 })
+  }
+}
+
+export async function PUT(request: NextRequest) {
+  try {
+    const body = await request.json()
+    const { id, admin_image } = body
+
+    if (!id) {
+      return NextResponse.json({ error: "Configuration ID required" }, { status: 400 })
+    }
+
+    await updateConfigurationImageServer(id, admin_image)
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error("Error updating configuration:", error)
+    return NextResponse.json({ error: "Failed to update configuration" }, { status: 500 })
   }
 }
 

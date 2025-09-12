@@ -46,6 +46,23 @@ export async function deleteConfigurationServer(id: string) {
   }
 }
 
+export async function updateConfigurationImageServer(id: string, adminImage: string) {
+  const supabase = createAdminClient()
+
+  const { error } = await supabase
+    .from("configuratorelegno_configurations")
+    .update({
+      admin_image: adminImage,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id)
+
+  if (error) {
+    console.error("Error updating configuration image:", error)
+    throw new Error("Failed to update configuration image")
+  }
+}
+
 export async function updateStructureTypeServer(
   id: string,
   data: { name: string; description: string; image?: string },

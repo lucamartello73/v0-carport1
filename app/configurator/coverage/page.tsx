@@ -84,7 +84,7 @@ export default function CoveragePage() {
                 {/* Image */}
                 <div className="relative h-40 mb-4 rounded-lg overflow-hidden">
                   <Image
-                    src={coverage.image || "/placeholder.svg?height=160&width=200"}
+                    src={coverage.image || "/placeholder.svg?height=180&width=180"}
                     alt={coverage.name}
                     fill
                     className="object-cover"

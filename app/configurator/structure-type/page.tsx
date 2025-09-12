@@ -47,9 +47,11 @@ export default function StructureTypePage() {
         <Header />
         <main className="configurator-bg">
           <div className="max-w-6xl mx-auto px-4 py-16">
-            <div className="text-center text-white">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-              <p>Caricamento tipi di struttura...</p>
+            <div className="text-center">
+              <div className="glass-card rounded-xl p-8 inline-block">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
+                <p className="text-gray-900 font-medium">Caricamento tipi di struttura...</p>
+              </div>
             </div>
           </div>
         </main>
@@ -84,7 +86,7 @@ export default function StructureTypePage() {
                 {/* Image */}
                 <div className="relative h-48 mb-4 rounded-lg overflow-hidden">
                   <Image
-                    src={type.image || "/placeholder.svg?height=200&width=300"}
+                    src={type.image || "/placeholder.svg?height=250&width=250"}
                     alt={type.name}
                     fill
                     className="object-cover"

@@ -90,7 +90,7 @@ export default function AccessoriesPage() {
                 {/* Image */}
                 <div className="relative h-32 mb-4 rounded-lg overflow-hidden">
                   <Image
-                    src={accessory.image || "/placeholder.svg?height=128&width=200"}
+                    src={accessory.image || "/placeholder.svg?height=150&width=150"}
                     alt={accessory.name}
                     fill
                     className="object-cover"
