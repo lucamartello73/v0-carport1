@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { createClient } from "@/lib/supabase/client"
+import { getImageUrl, getFallbackImageUrl } from "@/lib/utils/image-utils"
 import type { ConfigurationData } from "@/app/configuratore/page"
 
 interface Step6Props {
@@ -15,6 +16,7 @@ interface Surface {
   name: string
   description: string
   price_per_sqm: number
+  image?: string // Added optional image field
 }
 
 export function Step6Surface({ configuration, updateConfiguration }: Step6Props) {
@@ -70,9 +72,13 @@ export function Step6Surface({ configuration, updateConfiguration }: Step6Props)
             >
               <CardContent className="p-6">
                 <img
-                  src="/carport-surface-flooring.jpg"
+                  src={getImageUrl(surface.image) || "/placeholder.svg"}
                   alt={surface.name}
                   className="w-full h-48 object-cover rounded-lg mb-4"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement
+                    target.src = getFallbackImageUrl("surface")
+                  }}
                 />
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">{surface.name}</h3>
                 <p className="text-gray-700 mb-3">{surface.description}</p>

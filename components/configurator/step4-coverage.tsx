@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { createClient } from "@/lib/supabase/client"
+import { getImageUrl, getFallbackImageUrl } from "@/lib/utils/image-utils"
 import type { ConfigurationData } from "@/app/configuratore/page"
 
 interface Step4Props {
@@ -64,9 +65,13 @@ export function Step4Coverage({ configuration, updateConfiguration }: Step4Props
           >
             <CardContent className="p-6">
               <img
-                src={coverage.image || "/placeholder.svg?height=200&width=300&query=carport coverage type"}
+                src={getImageUrl(coverage.image) || "/placeholder.svg"}
                 alt={coverage.name}
                 className="w-full h-48 object-cover rounded-lg mb-4"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement
+                  target.src = getFallbackImageUrl("coverage")
+                }}
               />
               <h3 className="text-xl font-semibold text-gray-900 mb-2">{coverage.name}</h3>
               <p className="text-gray-700 mb-3">{coverage.description}</p>

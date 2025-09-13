@@ -25,22 +25,29 @@ export async function sendEmail(emailData: EmailData) {
 
   try {
     const requestBody = {
-      to: emailData.to,
-      from: emailData.from || adminEmail,
-      subject: emailData.subject,
-      text: emailData.html
-        .replace(/<[^>]*>/g, "")
-        .replace(/&nbsp;/g, " ")
-        .trim(),
+      message: {
+        to: [
+          {
+            email: emailData.to,
+            name: emailData.to.split("@")[0],
+          },
+        ],
+        from: {
+          email: emailData.from || adminEmail,
+          name: "Carport Configurator",
+        },
+        subject: emailData.subject,
+        body: emailData.html.replace(/<[^>]*>/g, "").trim(), // Simple HTML tag removal only
+      },
     }
 
     console.log("[v0] SendWith request body:", JSON.stringify(requestBody, null, 2))
 
-    const response = await fetch("https://api.sendwith.me/send", {
+    const response = await fetch("https://www.sendwith.email/api/send", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-API-Key": apiKey,
+        Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify(requestBody),
     })
@@ -70,53 +77,21 @@ export async function sendEmail(emailData: EmailData) {
 }
 
 export async function sendConfigurationNotification(data: ConfigurationEmailData) {
-  const customerEmailText = `
-Configurazione Carport Ricevuta
+  const customerEmailText = `Grazie ${data.customerName}! Abbiamo ricevuto la tua configurazione carport (ID: ${data.configurationId}). Ti contatteremo presto.`
 
-Gentile ${data.customerName},
-
-Grazie per aver configurato il tuo carport personalizzato. Abbiamo ricevuto la tua richiesta e ti contatteremo presto per finalizzare il progetto.
-
-Dettagli Configurazione:
-- ID Configurazione: ${data.configurationId}
-- Tipo Struttura: ${data.structureType}
-- Dimensioni: ${data.dimensions}
-
-Il nostro team tecnico esaminerà la tua configurazione e ti contatterà entro 24-48 ore per discutere i dettagli, organizzare un sopralluogo e fornirti un preventivo personalizzato.
-
-Se hai domande, non esitare a contattarci. Grazie per aver scelto i nostri servizi!
-
-Carport Configurator - Il tuo partner per carport personalizzati
-  `
-
-  const adminEmailText = `
-Nuova Configurazione Carport
-
-È stata ricevuta una nuova configurazione carport.
-
-Dettagli Cliente:
-- Nome: ${data.customerName}
-- Email: ${data.customerEmail}
-- ID Configurazione: ${data.configurationId}
-
-Dettagli Configurazione:
-- Tipo Struttura: ${data.structureType}
-- Dimensioni: ${data.dimensions}
-
-Accedi al pannello admin per visualizzare i dettagli completi e calcolare il preventivo.
-  `
+  const adminEmailText = `Nuova configurazione da ${data.customerName} (${data.customerEmail}). ID: ${data.configurationId}`
 
   // Send email to customer
   const customerResult = await sendEmail({
     to: data.customerEmail,
-    subject: "Configurazione Carport Ricevuta - Grazie per la tua richiesta",
+    subject: "Configurazione Carport Ricevuta",
     html: customerEmailText,
   })
 
   // Send notification to admin
   const adminResult = await sendEmail({
     to: process.env.ADMIN_EMAIL || "admin@carport.com",
-    subject: `Nuova Configurazione Carport - ${data.customerName}`,
+    subject: `Nuova Configurazione - ${data.customerName}`,
     html: adminEmailText,
   })
 

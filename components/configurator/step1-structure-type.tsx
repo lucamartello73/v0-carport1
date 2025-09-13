@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { createClient } from "@/lib/supabase/client"
+import { getImageUrl, getFallbackImageUrl } from "@/lib/utils/image-utils"
 import type { ConfigurationData } from "@/app/configuratore/page"
 
 interface Step1Props {
@@ -106,12 +107,12 @@ export function Step1StructureType({ configuration, updateConfiguration }: Step1
             <CardContent className="p-6">
               <div className="relative overflow-hidden rounded-lg mb-4">
                 <img
-                  src={type.image || "/placeholder.svg?height=200&width=300&query=carport structure"}
+                  src={getImageUrl(type.image) || "/placeholder.svg"}
                   alt={type.name}
                   className="w-full h-48 object-cover transition-transform duration-300 hover:scale-105"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement
-                    target.src = "/placeholder.svg?height=200&width=300"
+                    target.src = getFallbackImageUrl("structure")
                   }}
                 />
                 {selectedType === type.id && (

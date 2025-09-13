@@ -18,6 +18,7 @@ import {
   FileText,
   DollarSign,
   ArrowLeft,
+  Shield,
 } from "lucide-react"
 
 interface AdminLayoutProps {
@@ -29,6 +30,7 @@ const navigation = [
   { name: "Configurazioni", href: "/admin/configurations", icon: FileText },
   { name: "Modelli", href: "/admin/models", icon: Package },
   { name: "Tipi Struttura", href: "/admin/structure-types", icon: Settings },
+  { name: "Tipi Copertura", href: "/admin/coverage-types", icon: Shield },
   { name: "Colori", href: "/admin/colors", icon: Palette },
   { name: "Superfici", href: "/admin/surfaces", icon: Settings },
   { name: "Prezzi", href: "/admin/pricing", icon: DollarSign },

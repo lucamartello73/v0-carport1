@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { createClient } from "@/lib/supabase/client"
+import { getImageUrl, getFallbackImageUrl } from "@/lib/utils/image-utils"
 import type { ConfigurationData } from "@/app/configuratore/page"
 
 interface Step2Props {
@@ -66,12 +67,12 @@ export function Step2Model({ configuration, updateConfiguration }: Step2Props) {
           >
             <CardContent className="p-6">
               <img
-                src={model.image || "/placeholder.svg?height=200&width=300&query=carport model"}
+                src={getImageUrl(model.image) || "/placeholder.svg"}
                 alt={model.name}
                 className="w-full h-48 object-cover rounded-lg mb-4"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement
-                  target.src = "/placeholder.svg?height=200&width=300"
+                  target.src = getFallbackImageUrl("model")
                 }}
               />
               <h3 className="text-xl font-semibold text-green-800 mb-2">{model.name}</h3>
