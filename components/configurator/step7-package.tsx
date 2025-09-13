@@ -66,28 +66,18 @@ export function Step7Package({ configuration, updateConfiguration }: Step7Props)
     console.log("[v0] Configuration validation check:", {
       modelId: configuration.modelId,
       coverageId: configuration.coverageId,
-      structureColorId: configuration.structureColorId,
-      coverageColorId: configuration.coverageColorId,
-      surfaceId: configuration.surfaceId,
+      structureColor: configuration.structureColor,
       structureType: configuration.structureType,
       width: configuration.width,
       depth: configuration.depth,
       height: configuration.height,
     })
 
-    if (
-      !configuration.modelId ||
-      !configuration.coverageId ||
-      !configuration.structureColorId ||
-      !configuration.coverageColorId ||
-      !configuration.surfaceId
-    ) {
+    if (!configuration.modelId || !configuration.coverageId || !configuration.structureColor) {
       console.log("[v0] Missing required fields:", {
         modelId: !configuration.modelId ? "MISSING" : "OK",
         coverageId: !configuration.coverageId ? "MISSING" : "OK",
-        structureColorId: !configuration.structureColorId ? "MISSING" : "OK",
-        coverageColorId: !configuration.coverageColorId ? "MISSING" : "OK",
-        surfaceId: !configuration.surfaceId ? "MISSING" : "OK",
+        structureColor: !configuration.structureColor ? "MISSING" : "OK",
       })
       alert("Configurazione incompleta. Assicurati di aver completato tutti i passaggi.")
       return
@@ -103,9 +93,7 @@ export function Step7Package({ configuration, updateConfiguration }: Step7Props)
         depth: configuration.depth || 0,
         height: configuration.height || 0,
         coverage_id: configuration.coverageId,
-        structure_color_id: configuration.structureColorId,
-        coverage_color_id: configuration.coverageColorId,
-        surface_id: configuration.surfaceId,
+        structure_color: configuration.structureColor,
         customer_name: customerData.name,
         customer_email: customerData.email,
         customer_phone: customerData.phone,

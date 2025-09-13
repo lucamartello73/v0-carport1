@@ -9,9 +9,7 @@ export interface ConfigurationData {
   depth: number
   height: number
   coverage_id: string
-  structure_color_id: string
-  coverage_color_id: string
-  surface_id: string
+  structure_color: string
   package_type: string
   customer_name: string
   customer_email: string
@@ -28,7 +26,12 @@ export async function saveConfiguration(configData: ConfigurationData) {
   try {
     const supabase = await createClient()
 
-    const { data, error } = await supabase.from("carport_configurations").insert(configData).select().single()
+    const dbData = {
+      ...configData,
+      structure_color_id: null, // Set UUID field to null
+    }
+
+    const { data, error } = await supabase.from("carport_configurations").insert(dbData).select().single()
 
     if (error) {
       console.error("Database error:", error)

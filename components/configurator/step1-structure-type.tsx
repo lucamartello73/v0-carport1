@@ -27,23 +27,44 @@ const structureTypes = [
   },
 ]
 
+const materialTypes = [
+  {
+    id: "acciaio",
+    name: "Acciaio",
+    description: "Struttura in acciaio zincato, resistente e durevole",
+    colorCategory: "ral",
+    features: ["Resistente alla corrosione", "Lunga durata", "Manutenzione minima"],
+  },
+  {
+    id: "legno",
+    name: "Legno",
+    description: "Struttura in legno lamellare, naturale ed elegante",
+    colorCategory: "legno",
+    features: ["Materiale naturale", "Estetica elegante", "Isolamento termico"],
+  },
+]
+
 export function Step1StructureType({ configuration, updateConfiguration }: Step1Props) {
   const [selectedType, setSelectedType] = useState(configuration.structureType || "")
+  const [selectedMaterial, setSelectedMaterial] = useState(configuration.material || "")
   const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
-    if (selectedType) {
+    if (selectedType && selectedMaterial) {
       setIsLoading(true)
       // Simulate loading for better UX
       setTimeout(() => {
-        updateConfiguration({ structureType: selectedType })
+        updateConfiguration({
+          structureType: selectedType,
+          material: selectedMaterial,
+        })
         setIsLoading(false)
       }, 300)
     }
-  }, [selectedType, updateConfiguration])
+  }, [selectedType, selectedMaterial, updateConfiguration])
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="text-center">
         <p className="text-gray-800 text-lg">Seleziona il tipo di struttura per il tuo carport</p>
         <p className="text-gray-600 text-sm mt-2">Scegli tra una soluzione addossata o autoportante</p>
@@ -55,6 +76,7 @@ export function Step1StructureType({ configuration, updateConfiguration }: Step1
         </div>
       )}
 
+      {/* Structure Type Selection */}
       <div className="grid md:grid-cols-2 gap-8">
         {structureTypes.map((type) => (
           <Card
@@ -105,6 +127,61 @@ export function Step1StructureType({ configuration, updateConfiguration }: Step1
           </Card>
         ))}
       </div>
+
+      {selectedType && (
+        <div className="space-y-6">
+          <div className="text-center">
+            <p className="text-gray-800 text-lg">Seleziona il materiale della struttura</p>
+            <p className="text-gray-600 text-sm mt-2">Scegli tra acciaio o legno per la tua struttura</p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            {materialTypes.map((material) => (
+              <Card
+                key={material.id}
+                className={`cursor-pointer transition-all duration-300 hover:shadow-lg ${
+                  selectedMaterial === material.id
+                    ? "ring-2 ring-green-500 bg-gradient-to-br from-green-50 to-green-100 shadow-lg"
+                    : "hover:bg-gradient-to-br hover:from-gray-50 hover:to-gray-100"
+                }`}
+                onClick={() => setSelectedMaterial(material.id)}
+              >
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-xl font-bold text-gray-900">{material.name}</h3>
+                    {selectedMaterial === material.id && (
+                      <div className="bg-green-500 text-white rounded-full p-2">
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path
+                            fillRule="evenodd"
+                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-gray-700 mb-4 leading-relaxed">{material.description}</p>
+                  <div className="space-y-2">
+                    {material.features.map((feature, index) => (
+                      <div key={index} className="flex items-center text-sm text-gray-800">
+                        <svg className="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                          <path
+                            fillRule="evenodd"
+                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        {feature}
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

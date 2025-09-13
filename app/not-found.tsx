@@ -18,10 +18,10 @@ export default function NotFound() {
             La pagina che stai cercando non esiste o è stata spostata.
           </p>
           <div className="space-y-3">
-            <Link href="/" className="block">
+            <Link href="/configuratore" className="block">
               <Button className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg hover:shadow-xl transition-all duration-300">
                 <SimpleIcons.Home className="w-4 h-4 mr-2" />
-                Torna alla Home
+                Vai al Configuratore
               </Button>
             </Link>
             <Button

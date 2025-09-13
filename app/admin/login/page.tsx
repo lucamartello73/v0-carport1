@@ -10,10 +10,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ErrorMessage } from "@/components/ui/error-message"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
-import { Shield, Lock, Mail } from "lucide-react"
+import { Shield, Lock } from "lucide-react"
 
 export default function AdminLoginPage() {
-  const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
@@ -25,11 +24,11 @@ export default function AdminLoginPage() {
     setError("")
 
     try {
-      if (email === "admin@carport.com" && password === "admin123") {
+      if (password === "admin123") {
         // Create mock session
         const sessionData = {
           adminId: "1",
-          email: email,
+          email: "admin@carport.com",
           name: "Admin User",
           role: "admin",
           loginTime: new Date().toISOString(),
@@ -41,7 +40,7 @@ export default function AdminLoginPage() {
         // Redirect to admin dashboard
         router.push("/admin/dashboard")
       } else {
-        setError("Credenziali non valide. Usa admin@carport.com / admin123")
+        setError("Password non valida")
       }
     } catch (error) {
       console.error("Login error:", error)
@@ -65,26 +64,10 @@ export default function AdminLoginPage() {
         <Card className="shadow-xl border-0">
           <CardHeader className="text-center bg-gradient-to-r from-gray-600 to-gray-600 text-white rounded-t-lg">
             <CardTitle className="text-xl">Accesso Admin</CardTitle>
-            <CardDescription className="text-gray-100">Accedi al pannello di amministrazione</CardDescription>
+            <CardDescription className="text-gray-100">Inserisci la password per accedere</CardDescription>
           </CardHeader>
           <CardContent className="p-6 bg-white">
             <form onSubmit={handleLogin} className="space-y-4">
-              <div>
-                <Label htmlFor="email" className="flex items-center gap-2 text-gray-800">
-                  <Mail className="w-4 h-4" />
-                  Email
-                </Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  disabled={isLoading}
-                  className="mt-1 focus:ring-gray-500 focus:border-gray-500"
-                  placeholder="admin@carport.com"
-                />
-              </div>
               <div>
                 <Label htmlFor="password" className="flex items-center gap-2 text-gray-800">
                   <Lock className="w-4 h-4" />
@@ -98,7 +81,7 @@ export default function AdminLoginPage() {
                   required
                   disabled={isLoading}
                   className="mt-1 focus:ring-gray-500 focus:border-gray-500"
-                  placeholder="admin123"
+                  placeholder="Inserisci la password"
                 />
               </div>
               {error && <ErrorMessage message={error} />}
@@ -118,13 +101,7 @@ export default function AdminLoginPage() {
               </Button>
             </form>
             <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-              <p className="text-xs text-gray-600">
-                <strong>Credenziali demo:</strong>
-                <br />
-                Email: admin@carport.com
-                <br />
-                Password: admin123
-              </p>
+              <p className="text-xs text-gray-600">Inserisci la password per accedere al pannello amministrativo</p>
             </div>
           </CardContent>
         </Card>

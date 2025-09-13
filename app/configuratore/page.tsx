@@ -1,11 +1,9 @@
 "use client"
 
 import { useState, useCallback } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
-import { ChevronLeft, ChevronRight, Home } from "lucide-react"
-import Link from "next/link"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 
 // Import step components
 import { Step1StructureType } from "@/components/configurator/step1-structure-type"
@@ -18,14 +16,14 @@ import { Step7Package } from "@/components/configurator/step7-package"
 
 export interface ConfigurationData {
   structureType: string
+  material: string
   modelId: string
+  carSpots: number
   width: number
   depth: number
   height: number
   coverageId: string
-  structureColorId: string
-  coverageColorId: string
-  surfaceId: string
+  structureColor: string
   packageType: string
   customerName: string
   customerEmail: string
@@ -89,15 +87,44 @@ export default function ConfiguratorePage() {
 
   const progress = (currentStep / 7) * 100
 
+  const headerStyle = {
+    background: "linear-gradient(to right, #16a34a, #059669)",
+    backgroundColor: "#16a34a",
+    color: "#ffffff",
+    padding: "24px",
+    display: "flex",
+    alignItems: "center",
+    gap: "12px",
+  }
+
+  const iconStyle = {
+    color: "#ffffff",
+    fontSize: "32px",
+    lineHeight: "1",
+  }
+
+  const titleStyle = {
+    color: "#ffffff",
+    fontSize: "32px",
+    fontWeight: "bold",
+    margin: "0",
+    lineHeight: "1.2",
+  }
+
+  const descriptionStyle = {
+    color: "rgba(255, 255, 255, 0.9)",
+    marginTop: "4px",
+    fontWeight: "500",
+    margin: "0",
+    fontSize: "16px",
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-green-100 to-emerald-50">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
-          <Link href="/" className="flex items-center gap-2 text-green-700 hover:text-green-800 transition-colors">
-            <Home className="w-5 h-5" />
-            <span className="font-medium">Torna alla Home</span>
-          </Link>
+          <div className="w-24"></div> {/* Spacer for centering */}
           <div className="text-center">
             <h1 className="text-3xl font-bold text-green-800 mb-2">Configuratore Carport</h1>
             <p className="text-green-700">
@@ -143,18 +170,16 @@ export default function ConfiguratorePage() {
         </div>
 
         {/* Step Content */}
-        <Card className="max-w-6xl mx-auto shadow-xl border-0">
-          <CardHeader className="bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-t-lg">
-            <div className="flex items-center gap-3">
-              <span className="text-2xl">{steps[currentStep - 1].icon}</span>
-              <div>
-                <CardTitle className="text-2xl">{steps[currentStep - 1].title}</CardTitle>
-                <p className="text-green-100 mt-1">{steps[currentStep - 1].description}</p>
-              </div>
+        <div className="max-w-6xl mx-auto shadow-xl rounded-lg overflow-hidden bg-white">
+          <div style={headerStyle}>
+            <span style={iconStyle}>{steps[currentStep - 1].icon}</span>
+            <div>
+              <h2 style={titleStyle}>{steps[currentStep - 1].title}</h2>
+              <p style={descriptionStyle}>{steps[currentStep - 1].description}</p>
             </div>
-          </CardHeader>
-          <CardContent className="p-8 bg-white">{renderStep()}</CardContent>
-        </Card>
+          </div>
+          <div className="p-8 bg-white">{renderStep()}</div>
+        </div>
 
         {/* Navigation */}
         <div className="flex justify-between max-w-6xl mx-auto mt-8">
