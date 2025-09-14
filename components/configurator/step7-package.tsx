@@ -43,6 +43,39 @@ const Package = ({ className }: { className?: string }) => (
   </svg>
 )
 
+const Mail = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+    />
+  </svg>
+)
+
+const Phone = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+    />
+  </svg>
+)
+
+const MessageCircle = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+    />
+  </svg>
+)
+
 interface Step7Props {
   configuration: Partial<ConfigurationData>
   updateConfiguration: (data: Partial<ConfigurationData>) => void
@@ -79,6 +112,7 @@ const packageTypes = [
 
 export function Step7Package({ configuration, updateConfiguration }: Step7Props) {
   const [selectedPackage, setSelectedPackage] = useState(configuration.packageType || "")
+  const [contactPreference, setContactPreference] = useState(configuration.contactPreference || "email")
   const [customerData, setCustomerData] = useState({
     name: configuration.customerName || "",
     email: configuration.customerEmail || "",
@@ -151,6 +185,7 @@ export function Step7Package({ configuration, updateConfiguration }: Step7Props)
         customer_cap: customerData.cap,
         customer_province: customerData.province,
         package_type: selectedPackage,
+        contact_preference: contactPreference,
         total_price: 0,
         status: "nuovo",
       }
@@ -177,6 +212,7 @@ export function Step7Package({ configuration, updateConfiguration }: Step7Props)
               totalPrice: 0,
               structureType: configuration.structureType || configuration.structureTypeId || "Non specificato",
               dimensions: `${configuration.width}×${configuration.depth}×${configuration.height} cm`,
+              contactPreference: contactPreference,
             }),
           })
         } catch (emailError) {
@@ -335,6 +371,59 @@ export function Step7Package({ configuration, updateConfiguration }: Step7Props)
                 value={customerData.province}
                 onChange={(e) => setCustomerData({ ...customerData, province: e.target.value })}
               />
+            </div>
+          </div>
+
+          {/* Contact Preference Selection */}
+          <div className="mt-6">
+            <Label className="text-base font-medium text-gray-900 mb-4 block">Preferenza di Contatto *</Label>
+            <p className="text-sm text-gray-600 mb-4">
+              Come preferisci essere contattato per il preventivo e le informazioni sul tuo carport?
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {[
+                {
+                  id: "email",
+                  name: "Email",
+                  description: "Ricevi il preventivo via email",
+                  icon: Mail,
+                },
+                {
+                  id: "whatsapp",
+                  name: "WhatsApp",
+                  description: "Contatto rapido via WhatsApp",
+                  icon: MessageCircle,
+                },
+                {
+                  id: "telefono",
+                  name: "Telefono",
+                  description: "Chiamata telefonica diretta",
+                  icon: Phone,
+                },
+              ].map((option) => {
+                const IconComponent = option.icon
+                return (
+                  <Card
+                    key={option.id}
+                    className={`cursor-pointer transition-all ${
+                      contactPreference === option.id
+                        ? "ring-2 ring-orange-500 bg-orange-50"
+                        : "hover:bg-gray-50 border-gray-200"
+                    }`}
+                    onClick={() => setContactPreference(option.id)}
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-3">
+                        <IconComponent className="w-6 h-6 text-orange-500" />
+                        <div>
+                          <h4 className="font-medium text-gray-900">{option.name}</h4>
+                          <p className="text-sm text-gray-600">{option.description}</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )
+              })}
             </div>
           </div>
         </CardContent>

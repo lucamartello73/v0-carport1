@@ -18,4 +18,5 @@ export interface ConfigurationData {
   customerCity: string
   customerCap: string
   customerProvince: string
+  contactPreference: string // Added contact preference field
 }

@@ -19,6 +19,7 @@ export interface ConfigurationData {
   customer_city: string
   customer_cap: string
   customer_province: string
+  contact_preference: string // Added contact_preference field
   total_price: number
   status: string
 }

@@ -35,6 +35,7 @@ interface Configuration {
   depth: number
   height: number
   package_type: string
+  contact_preference: string // Added contact_preference field
   total_price: number
   status: string
   created_at: string
@@ -89,7 +90,7 @@ export default function ConfigurationsPage() {
           configurationsData?.map((config) => ({
             ...config,
             model_name: modelsMap.get(config.model_id) || "N/A",
-            structure_type_name: config.structure_type || "N/A",
+            structure_type_name: structureTypesMap.get(config.structure_type) || "N/A",
             structure_color_name: colorsMap.get(config.structure_color_id) || "N/A",
             coverage_name: coveragesMap.get(config.coverage_id) || "N/A",
             surface_name: surfacesMap.get(config.surface_id) || "N/A",
@@ -238,6 +239,18 @@ export default function ConfigurationsPage() {
                         <div>
                           <span className="font-medium">Città:</span> {config.customer_city} ({config.customer_cap}) -{" "}
                           {config.customer_province}
+                        </div>
+                        <div className="bg-purple-50 p-2 rounded border-l-4 border-purple-400">
+                          <span className="font-medium text-purple-800">Preferenza Contatto:</span>
+                          <span className="font-semibold text-purple-900 ml-1 capitalize">
+                            {config.contact_preference === "whatsapp"
+                              ? "WhatsApp"
+                              : config.contact_preference === "telefono"
+                                ? "Telefono"
+                                : config.contact_preference === "email"
+                                  ? "Email"
+                                  : config.contact_preference || "Non specificata"}
+                          </span>
                         </div>
                       </div>
 
