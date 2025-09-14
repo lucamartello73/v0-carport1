@@ -20,8 +20,21 @@ interface CoverageType {
   updated_at: string
 }
 
+interface StructureType {
+  id: string
+  name: string
+  description: string
+}
+
+interface CoverageStructureLink {
+  coverage_type_id: string
+  structure_type_id: string
+}
+
 export default function CoverageTypesPage() {
   const [coverageTypes, setCoverageTypes] = useState<CoverageType[]>([])
+  const [structureTypes, setStructureTypes] = useState<StructureType[]>([])
+  const [coverageStructureLinks, setCoverageStructureLinks] = useState<CoverageStructureLink[]>([])
   const [loading, setLoading] = useState(true)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [isCreating, setIsCreating] = useState(false)
@@ -34,6 +47,8 @@ export default function CoverageTypesPage() {
 
   useEffect(() => {
     fetchCoverageTypes()
+    fetchStructureTypes()
+    fetchCoverageStructureLinks()
   }, [])
 
   const fetchCoverageTypes = async () => {
@@ -49,6 +64,79 @@ export default function CoverageTypesPage() {
       setCoverageTypes(data || [])
     }
     setLoading(false)
+  }
+
+  const fetchStructureTypes = async () => {
+    const supabase = createClient()
+    const { data, error } = await supabase
+      .from("carport_structure_types")
+      .select("id, name, description")
+      .eq("is_active", true)
+      .order("name")
+
+    if (error) {
+      console.error("Error fetching structure types:", error)
+    } else {
+      setStructureTypes(data || [])
+    }
+  }
+
+  const fetchCoverageStructureLinks = async () => {
+    const supabase = createClient()
+    const { data, error } = await supabase
+      .from("carport_coverage_structure_types")
+      .select("coverage_type_id, structure_type_id")
+
+    if (error) {
+      console.error("Error fetching coverage-structure links:", error)
+    } else {
+      setCoverageStructureLinks(data || [])
+    }
+  }
+
+  const toggleStructureTypeLink = async (coverageTypeId: string, structureTypeId: string) => {
+    const supabase = createClient()
+    const existingLink = coverageStructureLinks.find(
+      (link) => link.coverage_type_id === coverageTypeId && link.structure_type_id === structureTypeId,
+    )
+
+    if (existingLink) {
+      const { error } = await supabase
+        .from("carport_coverage_structure_types")
+        .delete()
+        .eq("coverage_type_id", coverageTypeId)
+        .eq("structure_type_id", structureTypeId)
+
+      if (error) {
+        console.error("Error removing link:", error)
+      } else {
+        await fetchCoverageStructureLinks()
+      }
+    } else {
+      const { error } = await supabase
+        .from("carport_coverage_structure_types")
+        .insert([{ coverage_type_id: coverageTypeId, structure_type_id: structureTypeId }])
+
+      if (error) {
+        console.error("Error adding link:", error)
+      } else {
+        await fetchCoverageStructureLinks()
+      }
+    }
+  }
+
+  const isLinkedToStructureType = (coverageTypeId: string, structureTypeId: string) => {
+    return coverageStructureLinks.some(
+      (link) => link.coverage_type_id === coverageTypeId && link.structure_type_id === structureTypeId,
+    )
+  }
+
+  const getLinkedStructureTypes = (coverageTypeId: string) => {
+    const linkedIds = coverageStructureLinks
+      .filter((link) => link.coverage_type_id === coverageTypeId)
+      .map((link) => link.structure_type_id)
+
+    return structureTypes.filter((st) => linkedIds.includes(st.id))
   }
 
   const handleSave = async () => {
@@ -211,6 +299,36 @@ export default function CoverageTypesPage() {
                         Modificatore prezzo: {coverageType.price_modifier > 0 ? "+" : ""}
                         {coverageType.price_modifier}%
                       </span>
+                    </div>
+
+                    <div className="mb-6">
+                      <h4 className="text-sm font-medium text-gray-700 mb-3">
+                        Tipi di Struttura Collegati ({getLinkedStructureTypes(coverageType.id).length}/
+                        {structureTypes.length})
+                      </h4>
+                      <div className="flex flex-wrap gap-2">
+                        {structureTypes.map((structureType) => {
+                          const isLinked = isLinkedToStructureType(coverageType.id, structureType.id)
+                          return (
+                            <Button
+                              key={structureType.id}
+                              onClick={() => toggleStructureTypeLink(coverageType.id, structureType.id)}
+                              variant={isLinked ? "default" : "outline"}
+                              size="sm"
+                              className={
+                                isLinked
+                                  ? "bg-green-600 hover:bg-green-700 text-white"
+                                  : "border-green-300 text-green-700 hover:bg-green-50"
+                              }
+                            >
+                              {structureType.name}
+                            </Button>
+                          )
+                        })}
+                      </div>
+                      <p className="text-xs text-gray-500 mt-2">
+                        Clicca sui pulsanti per collegare/scollegare questo tipo di copertura ai tipi di struttura
+                      </p>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

@@ -10,6 +10,7 @@ export interface ConfigurationData {
   height: number
   coverage_id: string
   structure_color: string
+  surface_id?: string
   package_type: string
   customer_name: string
   customer_email: string
@@ -24,58 +25,55 @@ export interface ConfigurationData {
 
 export async function saveConfiguration(configData: ConfigurationData) {
   try {
+    console.log("[v0] Starting saveConfiguration with data:", configData)
     const supabase = await createClient()
 
     let structure_color_id = null
+
     if (configData.structure_color) {
-      const { data: colorData, error: colorError } = await supabase
-        .from("carport_colors")
-        .select("id")
-        .ilike("name", `%${configData.structure_color}%`)
-        .maybeSingle()
-
-      if (colorError) {
-        console.error("Color lookup error:", colorError)
-      } else if (colorData) {
-        structure_color_id = colorData.id
+      console.log("[v0] Looking up structure color:", configData.structure_color)
+      // Check if it's already a valid UUID (direct color ID)
+      if (configData.structure_color.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+        // It's a UUID, use it directly
+        structure_color_id = configData.structure_color
+        console.log("[v0] Using structure color ID directly:", structure_color_id)
       } else {
-        console.log("[v0] Color not found, creating custom color:", configData.structure_color)
-        const { data: newColorData, error: insertError } = await supabase
+        // It's a custom color or name, try to find by name
+        const { data: colorData, error: colorError } = await supabase
           .from("carport_colors")
-          .insert({
-            name: configData.structure_color,
-            hex_value: "#000000", // Default hex for custom colors
-            category: "custom",
-            price_modifier: 0,
-          })
           .select("id")
-          .single()
+          .ilike("name", `%${configData.structure_color}%`)
+          .maybeSingle()
 
-        if (!insertError && newColorData) {
-          structure_color_id = newColorData.id
-          console.log("[v0] Created custom color with ID:", structure_color_id)
-        } else {
-          console.error("Error creating custom color:", insertError)
+        if (colorError) {
+          console.error("[v0] Structure color lookup error:", colorError)
+        } else if (colorData) {
+          structure_color_id = colorData.id
+          console.log("[v0] Found existing structure color with ID:", structure_color_id)
         }
       }
     }
 
-    const { structure_color, ...restConfigData } = configData
+    const { structure_color, surface_id, ...restConfigData } = configData
     const dbData = {
       ...restConfigData,
       structure_color_id,
+      coverage_color_id: null, // Always null since coverage color is not selected by client
+      surface_id: surface_id || null,
     }
 
+    console.log("[v0] Attempting to insert configuration data:", dbData)
     const { data, error } = await supabase.from("carport_configurations").insert(dbData).select().single()
 
     if (error) {
-      console.error("Database error:", error)
+      console.error("[v0] Database insert error:", error)
       throw new Error(`Database error: ${error.message}`)
     }
 
+    console.log("[v0] Configuration saved successfully:", data)
     return { success: true, data }
   } catch (error) {
-    console.error("Error saving configuration:", error)
+    console.error("[v0] Error in saveConfiguration:", error)
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error occurred",

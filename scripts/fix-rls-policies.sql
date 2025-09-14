@@ -4,6 +4,9 @@
 -- Disable RLS for carport_models table
 ALTER TABLE carport_models DISABLE ROW LEVEL SECURITY;
 
+-- Adding carport_configurations to disable RLS for admin dashboard access
+ALTER TABLE carport_configurations DISABLE ROW LEVEL SECURITY;
+
 -- Disable RLS for other admin tables to prevent similar issues
 ALTER TABLE carport_structure_types DISABLE ROW LEVEL SECURITY;
 ALTER TABLE carport_coverage_types DISABLE ROW LEVEL SECURITY;
@@ -12,7 +15,6 @@ ALTER TABLE carport_surfaces DISABLE ROW LEVEL SECURITY;
 ALTER TABLE carport_pricing_rules DISABLE ROW LEVEL SECURITY;
 
 -- Keep RLS enabled for user-facing tables
--- ALTER TABLE carport_configurations ENABLE ROW LEVEL SECURITY;
 -- ALTER TABLE carport_admin_users ENABLE ROW LEVEL SECURITY;
 
 -- Note: In a production environment, you should create proper RLS policies

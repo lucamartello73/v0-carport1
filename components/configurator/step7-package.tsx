@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Checkbox } from "@/components/ui/checkbox"
 import type { ConfigurationData } from "@/app/configuratore/page"
 import { saveConfiguration } from "@/app/actions/save-configuration"
 
@@ -87,6 +88,7 @@ export function Step7Package({ configuration, updateConfiguration }: Step7Props)
     cap: configuration.customerCap || "",
     province: configuration.customerProvince || "",
   })
+  const [privacyAccepted, setPrivacyAccepted] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
 
@@ -96,11 +98,17 @@ export function Step7Package({ configuration, updateConfiguration }: Step7Props)
       return
     }
 
+    if (!privacyAccepted) {
+      alert("Devi accettare l'informativa sulla privacy per continuare")
+      return
+    }
+
     console.log("[v0] Configuration validation check:", {
       modelId: configuration.modelId,
       coverageId: configuration.coverageId,
       structureColor: configuration.structureColor,
       structureType: configuration.structureType,
+      structureTypeId: configuration.structureTypeId, // Added structureTypeId to debug log
       width: configuration.width,
       depth: configuration.depth,
       height: configuration.height,
@@ -110,13 +118,13 @@ export function Step7Package({ configuration, updateConfiguration }: Step7Props)
       !configuration.modelId ||
       !configuration.coverageId ||
       !configuration.structureColor ||
-      !configuration.structureType
+      (!configuration.structureType && !configuration.structureTypeId)
     ) {
       console.log("[v0] Missing required fields:", {
         modelId: !configuration.modelId ? "MISSING" : "OK",
         coverageId: !configuration.coverageId ? "MISSING" : "OK",
         structureColor: !configuration.structureColor ? "MISSING" : "OK",
-        structureType: !configuration.structureType ? "MISSING" : "OK",
+        structureType: !configuration.structureType && !configuration.structureTypeId ? "MISSING" : "OK",
       })
       alert("Configurazione incompleta. Assicurati di aver completato tutti i passaggi.")
       return
@@ -126,13 +134,15 @@ export function Step7Package({ configuration, updateConfiguration }: Step7Props)
 
     try {
       const configurationData = {
-        structure_type: configuration.structureType || "",
+        structure_type: configuration.structureType || configuration.structureTypeId || "",
         model_id: configuration.modelId,
         width: configuration.width || 0,
         depth: configuration.depth || 0,
         height: configuration.height || 0,
         coverage_id: configuration.coverageId,
         structure_color: configuration.structureColor,
+        coverage_color: configuration.coverageColor,
+        surface_id: configuration.surfaceId,
         customer_name: customerData.name,
         customer_email: customerData.email,
         customer_phone: customerData.phone,
@@ -165,7 +175,7 @@ export function Step7Package({ configuration, updateConfiguration }: Step7Props)
               customerEmail: customerData.email,
               configurationId: result.data.id,
               totalPrice: 0,
-              structureType: configuration.structureType || "Non specificato",
+              structureType: configuration.structureType || configuration.structureTypeId || "Non specificato",
               dimensions: `${configuration.width}×${configuration.depth}×${configuration.height} cm`,
             }),
           })
@@ -327,12 +337,47 @@ export function Step7Package({ configuration, updateConfiguration }: Step7Props)
         </CardContent>
       </Card>
 
+      {/* Privacy Acceptance Section */}
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex items-start space-x-3">
+            <Checkbox
+              id="privacy"
+              checked={privacyAccepted}
+              onCheckedChange={(checked) => setPrivacyAccepted(checked as boolean)}
+              className="mt-1"
+            />
+            <div className="space-y-2">
+              <Label
+                htmlFor="privacy"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                Accettazione Privacy *
+              </Label>
+              <p className="text-sm text-gray-600">
+                Accetto l'informativa sulla privacy e autorizzo il trattamento dei miei dati personali per l'invio del
+                preventivo e per essere contattato in merito alla configurazione del carport. I dati saranno trattati in
+                conformità al GDPR (Regolamento UE 2016/679).
+              </p>
+              <p className="text-xs text-gray-500">
+                Puoi consultare la nostra informativa completa sulla privacy sul nostro sito web.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Submit Button */}
       <div className="text-center">
         <Button
           onClick={handleSubmit}
           disabled={
-            isSubmitting || !selectedPackage || !customerData.name || !customerData.email || !customerData.phone
+            isSubmitting ||
+            !selectedPackage ||
+            !customerData.name ||
+            !customerData.email ||
+            !customerData.phone ||
+            !privacyAccepted
           }
           className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 text-lg"
         >

@@ -1,16 +1,18 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { createClient } from "@/lib/supabase/client"
+import Image from "next/image"
+import { X } from "lucide-react"
 
 interface ImageUploadProps {
   currentImage?: string
-  onImageUploaded: (url: string) => void
+  onImageUploaded: (url: string | null) => void
+  onImageRemoved?: () => void
   bucket?: string
   folder?: string
   label?: string
@@ -19,6 +21,7 @@ interface ImageUploadProps {
 export function ImageUpload({
   currentImage,
   onImageUploaded,
+  onImageRemoved = () => {},
   bucket = "images",
   folder = "carport",
   label = "Immagine",
@@ -35,13 +38,15 @@ export function ImageUpload({
     setUploadError(null)
 
     try {
+      const compressedFile = await compressImage(file)
+
       const supabase = createClient()
 
       // Create unique filename
       const fileExt = file.name.split(".").pop()
       const fileName = `${folder}/${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`
 
-      const { data, error } = await supabase.storage.from(bucket).upload(fileName, file)
+      const { data, error } = await supabase.storage.from(bucket).upload(fileName, compressedFile)
 
       if (error) {
         console.error("Error uploading file:", error)
@@ -51,7 +56,6 @@ export function ImageUpload({
           setUploadError(
             "Il bucket di storage non è configurato. Esegui lo script SQL per crearlo o usa l'URL manuale.",
           )
-          // Don't show alert, just set error message
         } else if (error.message && error.message.includes("not authenticated")) {
           setUploadError("Devi essere autenticato per caricare file. Usa l'URL manuale.")
         } else {
@@ -77,6 +81,63 @@ export function ImageUpload({
     }
   }
 
+  const compressImage = (file: File): Promise<File> => {
+    return new Promise((resolve) => {
+      const canvas = document.createElement("canvas")
+      const ctx = canvas.getContext("2d")
+      const img = new window.Image()
+
+      img.onload = () => {
+        // Calculate new dimensions (max 1200px width/height)
+        const maxSize = 1200
+        let { width, height } = img
+
+        if (width > height) {
+          if (width > maxSize) {
+            height = (height * maxSize) / width
+            width = maxSize
+          }
+        } else {
+          if (height > maxSize) {
+            width = (width * maxSize) / height
+            height = maxSize
+          }
+        }
+
+        canvas.width = width
+        canvas.height = height
+
+        // Draw and compress
+        ctx?.drawImage(img, 0, 0, width, height)
+
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              const compressedFile = new File([blob], file.name, {
+                type: "image/jpeg",
+                lastModified: Date.now(),
+              })
+              resolve(compressedFile)
+            } else {
+              resolve(file) // Fallback to original file
+            }
+          },
+          "image/jpeg",
+          0.8, // 80% quality for good compression
+        )
+      }
+
+      img.src = URL.createObjectURL(file)
+    })
+  }
+
+  const handleRemoveImage = () => {
+    setPreviewUrl("")
+    onImageUploaded(null)
+    onImageRemoved()
+    setUploadError(null)
+  }
+
   return (
     <div className="space-y-4">
       <div>
@@ -89,7 +150,7 @@ export function ImageUpload({
             onChange={(e) => {
               setPreviewUrl(e.target.value)
               onImageUploaded(e.target.value)
-              setUploadError(null) // Clear error when manually entering URL
+              setUploadError(null)
             }}
             className="flex-1"
           />
@@ -111,6 +172,18 @@ export function ImageUpload({
               {uploading ? "Caricamento..." : "Carica File"}
             </Button>
           </div>
+          {previewUrl && (
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={handleRemoveImage}
+              className="text-red-600 border-red-300 hover:bg-red-50 bg-transparent"
+              title="Rimuovi immagine"
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          )}
         </div>
 
         {uploadError && (
@@ -127,10 +200,14 @@ export function ImageUpload({
 
       {previewUrl && (
         <div className="mt-4">
-          <img
+          <Image
             src={previewUrl || "/placeholder.svg"}
             alt="Preview"
+            width={128}
+            height={128}
             className="w-32 h-32 object-cover rounded-lg border"
+            placeholder="blur"
+            blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
             onError={(e) => {
               const target = e.target as HTMLImageElement
               target.src = "/placeholder.svg?height=128&width=128"

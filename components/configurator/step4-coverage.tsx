@@ -27,18 +27,56 @@ export function Step4Coverage({ configuration, updateConfiguration }: Step4Props
   useEffect(() => {
     const fetchCoverageTypes = async () => {
       const supabase = createClient()
-      const { data, error } = await supabase.from("carport_coverage_types").select("*").order("name")
 
-      if (error) {
-        console.error("Error fetching coverage types:", error)
+      if (configuration.structureTypeId) {
+        console.log("[v0] Fetching coverage types for structure type:", configuration.structureTypeId)
+
+        // Get coverage types linked to the selected structure type
+        const { data, error } = await supabase
+          .from("carport_coverage_types")
+          .select(`
+            *,
+            carport_coverage_structure_types!inner(
+              structure_type_id
+            )
+          `)
+          .eq("carport_coverage_structure_types.structure_type_id", configuration.structureTypeId)
+          .order("name")
+
+        if (error) {
+          console.error("Error fetching filtered coverage types:", error)
+          // Fallback to all coverage types if filtering fails
+          const { data: fallbackData, error: fallbackError } = await supabase
+            .from("carport_coverage_types")
+            .select("*")
+            .order("name")
+
+          if (fallbackError) {
+            console.error("Error fetching fallback coverage types:", fallbackError)
+          } else {
+            setCoverageTypes(fallbackData || [])
+          }
+        } else {
+          console.log("[v0] Loaded filtered coverage types:", data)
+          setCoverageTypes(data || [])
+        }
       } else {
-        setCoverageTypes(data || [])
+        // If no structure type selected, show all coverage types
+        console.log("[v0] No structure type selected, showing all coverage types")
+        const { data, error } = await supabase.from("carport_coverage_types").select("*").order("name")
+
+        if (error) {
+          console.error("Error fetching coverage types:", error)
+        } else {
+          setCoverageTypes(data || [])
+        }
       }
+
       setLoading(false)
     }
 
     fetchCoverageTypes()
-  }, [])
+  }, [configuration.structureTypeId]) // Re-fetch when structure type changes
 
   useEffect(() => {
     if (selectedCoverage) {
@@ -46,13 +84,38 @@ export function Step4Coverage({ configuration, updateConfiguration }: Step4Props
     }
   }, [selectedCoverage, updateConfiguration])
 
+  useEffect(() => {
+    if (selectedCoverage && coverageTypes.length > 0) {
+      const isSelectedCoverageAvailable = coverageTypes.some((ct) => ct.id === selectedCoverage)
+      if (!isSelectedCoverageAvailable) {
+        console.log("[v0] Selected coverage not available for current structure type, resetting")
+        setSelectedCoverage("")
+        updateConfiguration({ coverageId: "" })
+      }
+    }
+  }, [coverageTypes, selectedCoverage, updateConfiguration])
+
   if (loading) {
     return <div className="text-center py-8 text-gray-600">Caricamento tipi di copertura...</div>
   }
 
+  if (coverageTypes.length === 0) {
+    return (
+      <div className="text-center py-8 text-gray-600">
+        <p>Nessun tipo di copertura disponibile per il tipo di struttura selezionato.</p>
+        <p className="text-sm mt-2">Contatta l'amministratore per configurare i collegamenti.</p>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
-      <p className="text-gray-800 text-center">Seleziona il tipo di copertura per il tuo carport</p>
+      <p className="text-gray-800 text-center">
+        Seleziona il tipo di copertura per il tuo carport
+        {configuration.structureType && (
+          <span className="block text-sm text-gray-600 mt-1">Compatibile con: {configuration.structureType}</span>
+        )}
+      </p>
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         {coverageTypes.map((coverage) => (

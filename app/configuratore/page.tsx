@@ -13,25 +13,9 @@ import { Step5Colors } from "@/components/configurator/step5-colors"
 import { Step6Surface } from "@/components/configurator/step6-surface"
 import { Step7Package } from "@/components/configurator/step7-package"
 
-export interface ConfigurationData {
-  structureType: string
-  material: string
-  modelId: string
-  carSpots: number
-  width: number
-  depth: number
-  height: number
-  coverageId: string
-  structureColor: string
-  packageType: string
-  customerName: string
-  customerEmail: string
-  customerPhone: string
-  customerAddress: string
-  customerCity: string
-  customerCap: string
-  customerProvince: string
-}
+import type { ConfigurationData } from "@/types/configuration"
+
+export type { ConfigurationData }
 
 const steps = [
   { id: 1, title: "Modello", description: "Seleziona il modello", icon: "📐" },

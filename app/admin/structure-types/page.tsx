@@ -17,16 +17,37 @@ interface StructureType {
   name: string
   description: string
   image: string
-  structure_category: string
-  material_type: string
+  model_id: string
   features: string[]
   is_active: boolean
   created_at: string
   updated_at: string
 }
 
+interface Model {
+  id: string
+  name: string
+  description: string
+}
+
+const PREDEFINED_FEATURES = [
+  "Resistente alle intemperie",
+  "Facile installazione",
+  "Garanzia 10 anni",
+  "Materiali di qualità",
+  "Design elegante",
+  "Ottimizza lo spazio",
+  "Manutenzione ridotta",
+  "Struttura robusta",
+  "Protezione UV",
+  "Antiscivolo",
+  "Eco-sostenibile",
+  "Personalizzabile",
+]
+
 export default function StructureTypesPage() {
   const [structureTypes, setStructureTypes] = useState<StructureType[]>([])
+  const [models, setModels] = useState<Model[]>([])
   const [loading, setLoading] = useState(true)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [isCreating, setIsCreating] = useState(false)
@@ -34,29 +55,49 @@ export default function StructureTypesPage() {
     name: "",
     description: "",
     image: "",
-    structure_category: "",
-    material_type: "",
+    model_id: "",
     features: [""],
     is_active: true,
   })
 
   useEffect(() => {
     fetchStructureTypes()
+    fetchModels()
   }, [])
 
   const fetchStructureTypes = async () => {
     const supabase = createClient()
     const { data, error } = await supabase
       .from("carport_structure_types")
-      .select("*")
+      .select(`
+        *,
+        carport_models!carport_structure_types_model_id_fkey (
+          id,
+          name,
+          description
+        )
+      `)
       .order("created_at", { ascending: false })
 
     if (error) {
       console.error("Error fetching structure types:", error)
     } else {
+      console.log("[v0] Loaded structure types with models:", data)
       setStructureTypes(data || [])
     }
     setLoading(false)
+  }
+
+  const fetchModels = async () => {
+    const supabase = createClient()
+    const { data, error } = await supabase.from("carport_models").select("id, name, description").order("name")
+
+    if (error) {
+      console.error("Error fetching models:", error)
+    } else {
+      console.log("[v0] Loaded models:", data)
+      setModels(data || [])
+    }
   }
 
   const handleSave = async () => {
@@ -64,7 +105,10 @@ export default function StructureTypesPage() {
     const dataToSave = {
       ...formData,
       features: formData.features.filter((f) => f.trim() !== ""),
+      model_id: formData.model_id.trim() === "" ? null : formData.model_id,
     }
+
+    console.log("[v0] Saving structure type:", dataToSave)
 
     let error
     if (editingId) {
@@ -81,6 +125,7 @@ export default function StructureTypesPage() {
     if (error) {
       console.error("Error saving structure type:", error)
     } else {
+      console.log("[v0] Structure type saved successfully")
       await fetchStructureTypes()
       resetForm()
     }
@@ -105,8 +150,7 @@ export default function StructureTypesPage() {
       name: structureType.name,
       description: structureType.description,
       image: structureType.image,
-      structure_category: structureType.structure_category,
-      material_type: structureType.material_type,
+      model_id: structureType.model_id || "",
       features: structureType.features.length > 0 ? structureType.features : [""],
       is_active: structureType.is_active,
     })
@@ -120,8 +164,7 @@ export default function StructureTypesPage() {
       name: "",
       description: "",
       image: "",
-      structure_category: "",
-      material_type: "",
+      model_id: "",
       features: [""],
       is_active: true,
     })
@@ -132,6 +175,16 @@ export default function StructureTypesPage() {
       ...prev,
       features: [...prev.features, ""],
     }))
+  }
+
+  const addPredefinedFeature = (feature: string) => {
+    // Check if feature already exists
+    if (!formData.features.includes(feature)) {
+      setFormData((prev) => ({
+        ...prev,
+        features: [...prev.features.filter((f) => f.trim() !== ""), feature, ""],
+      }))
+    }
   }
 
   const updateFeature = (index: number, value: string) => {
@@ -183,49 +236,29 @@ export default function StructureTypesPage() {
                   <Input
                     value={formData.name}
                     onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
-                    placeholder="es. Addossato"
+                    placeholder="es. Addossato Legno"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Categoria</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Modello Collegato</label>
                   <Select
-                    value={formData.structure_category}
-                    onValueChange={(value) => setFormData((prev) => ({ ...prev, structure_category: value }))}
+                    value={formData.model_id}
+                    onValueChange={(value) => setFormData((prev) => ({ ...prev, model_id: value }))}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Seleziona categoria" />
+                      <SelectValue placeholder="Seleziona modello" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="addossato">Addossato</SelectItem>
-                      <SelectItem value="autoportante">Autoportante</SelectItem>
+                      {models.map((model) => (
+                        <SelectItem key={model.id} value={model.id}>
+                          {model.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Tipo Materiale</label>
-                  <Select
-                    value={formData.material_type}
-                    onValueChange={(value) => setFormData((prev) => ({ ...prev, material_type: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Seleziona materiale" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="acciaio">Acciaio</SelectItem>
-                      <SelectItem value="legno">Legno</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <ImageUpload
-                    currentImage={formData.image}
-                    onImageUploaded={(url) => setFormData((prev) => ({ ...prev, image: url }))}
-                    folder="structure-types"
-                    label="Immagine Tipo Struttura"
-                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Questo tipo di struttura sarà disponibile quando viene selezionato il modello corrispondente
+                  </p>
                 </div>
               </div>
 
@@ -239,31 +272,66 @@ export default function StructureTypesPage() {
                 />
               </div>
 
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <ImageUpload
+                    currentImage={formData.image}
+                    onImageUploaded={(url) => setFormData((prev) => ({ ...prev, image: url }))}
+                    folder="structure-types"
+                    label="Immagine Tipo Struttura"
+                  />
+                </div>
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Caratteristiche</label>
-                <div className="space-y-2">
-                  {formData.features.map((feature, index) => (
-                    <div key={index} className="flex gap-2">
-                      <Input
-                        value={feature}
-                        onChange={(e) => updateFeature(index, e.target.value)}
-                        placeholder="es. Facile installazione"
-                      />
+
+                <div className="mb-4">
+                  <h4 className="text-sm font-medium text-gray-700 mb-2">Caratteristiche Predefinite</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {PREDEFINED_FEATURES.map((feature) => (
                       <Button
+                        key={feature}
                         type="button"
-                        variant="outline"
+                        variant={formData.features.includes(feature) ? "default" : "outline"}
                         size="sm"
-                        onClick={() => removeFeature(index)}
-                        disabled={formData.features.length === 1}
+                        onClick={() => addPredefinedFeature(feature)}
+                        className={formData.features.includes(feature) ? "bg-green-600 hover:bg-green-700" : ""}
+                        disabled={formData.features.includes(feature)}
                       >
-                        <X className="w-4 h-4" />
+                        <Plus className="w-3 h-3 mr-1" />
+                        {feature}
                       </Button>
-                    </div>
-                  ))}
-                  <Button type="button" variant="outline" size="sm" onClick={addFeature}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Aggiungi Caratteristica
-                  </Button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="text-sm font-medium text-gray-700 mb-2">Caratteristiche Personalizzate</h4>
+                  <div className="space-y-2">
+                    {formData.features.map((feature, index) => (
+                      <div key={index} className="flex gap-2">
+                        <Input
+                          value={feature}
+                          onChange={(e) => updateFeature(index, e.target.value)}
+                          placeholder="es. Caratteristica personalizzata"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => removeFeature(index)}
+                          disabled={formData.features.length === 1}
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ))}
+                    <Button type="button" variant="outline" size="sm" onClick={addFeature}>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Aggiungi Caratteristica Personalizzata
+                    </Button>
+                  </div>
                 </div>
               </div>
 
@@ -307,7 +375,7 @@ export default function StructureTypesPage() {
                         {structureType.is_active ? "Attivo" : "Inattivo"}
                       </Badge>
                       <Badge variant="outline">
-                        {structureType.structure_category} - {structureType.material_type}
+                        Modello: {(structureType as any).carport_models?.name || "Non collegato"}
                       </Badge>
                     </div>
 

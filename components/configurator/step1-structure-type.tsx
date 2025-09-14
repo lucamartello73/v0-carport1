@@ -18,9 +18,9 @@ interface StructureType {
   description: string
   image: string
   structure_category: string
-  material_type: string
   features: string[]
   is_active: boolean
+  model_id?: string // Added model_id to StructureType interface
 }
 
 export function Step1StructureType({ configuration, updateConfiguration }: Step1Props) {
@@ -34,11 +34,14 @@ export function Step1StructureType({ configuration, updateConfiguration }: Step1
       try {
         const supabase = createClient()
 
-        const { data, error } = await supabase
-          .from("carport_structure_types")
-          .select("*")
-          .eq("is_active", true)
-          .order("name")
+        let query = supabase.from("carport_structure_types").select("*").eq("is_active", true).order("name")
+
+        // If a model is selected, filter structure types by model_id
+        if (configuration.modelId) {
+          query = query.eq("model_id", configuration.modelId)
+        }
+
+        const { data, error } = await query
 
         if (error) {
           console.error("Error loading structure types:", error)
@@ -46,6 +49,7 @@ export function Step1StructureType({ configuration, updateConfiguration }: Step1
         }
 
         console.log("[v0] Loaded structure types from database:", data)
+        console.log("[v0] Filtered by model ID:", configuration.modelId)
         setStructureTypes(data || [])
       } catch (error) {
         console.error("Error loading structure types:", error)
@@ -55,7 +59,7 @@ export function Step1StructureType({ configuration, updateConfiguration }: Step1
     }
 
     loadStructureTypes()
-  }, [])
+  }, [configuration.modelId]) // Add modelId as dependency
 
   useEffect(() => {
     if (selectedType) {
@@ -64,8 +68,8 @@ export function Step1StructureType({ configuration, updateConfiguration }: Step1
       setTimeout(() => {
         const selectedStructure = structureTypes.find((type) => type.id === selectedType)
         updateConfiguration({
-          structureType: selectedType,
-          material: selectedStructure?.material_type || "",
+          structureTypeId: selectedType,
+          structureType: selectedStructure?.name || selectedType, // Use structure name for validation
         })
         setIsUpdating(false)
       }, 300)
@@ -129,15 +133,6 @@ export function Step1StructureType({ configuration, updateConfiguration }: Step1
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-3">{type.name}</h3>
               <p className="text-gray-700 mb-4 leading-relaxed">{type.description}</p>
-
-              <div className="mb-4">
-                <span className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full mr-2">
-                  {type.structure_category}
-                </span>
-                <span className="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
-                  {type.material_type}
-                </span>
-              </div>
 
               {type.features && type.features.length > 0 && (
                 <div className="space-y-2">

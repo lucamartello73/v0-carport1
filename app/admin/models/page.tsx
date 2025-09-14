@@ -10,6 +10,7 @@ import { AdminLayout } from "@/components/admin/admin-layout"
 import { createClient } from "@/lib/supabase/client"
 import { Plus, Edit, Trash2 } from "lucide-react"
 import { ImageUpload } from "@/components/admin/image-upload"
+import Image from "next/image"
 
 interface Model {
   id: string
@@ -17,21 +18,55 @@ interface Model {
   description: string
   base_price: number
   image: string
+  structure_type_id: string | null
+  structure_type: {
+    name: string
+    structure_category: string
+  }
+}
+
+interface StructureType {
+  id: string
+  name: string
+  structure_category: string
 }
 
 export default function ModelsPage() {
   const [models, setModels] = useState<Model[]>([])
+  const [structureTypes, setStructureTypes] = useState<StructureType[]>([])
   const [loading, setLoading] = useState(true)
   const [isEditing, setIsEditing] = useState(false)
   const [editingModel, setEditingModel] = useState<Partial<Model>>({})
 
   useEffect(() => {
     fetchModels()
+    fetchStructureTypes()
   }, [])
+
+  const fetchStructureTypes = async () => {
+    const supabase = createClient()
+    const { data, error } = await supabase
+      .from("carport_structure_types")
+      .select("id, name, structure_category")
+      .eq("is_active", true)
+      .order("name")
+
+    if (error) {
+      console.error("Error fetching structure types:", error)
+    } else {
+      setStructureTypes(data || [])
+    }
+  }
 
   const fetchModels = async () => {
     const supabase = createClient()
-    const { data, error } = await supabase.from("carport_models").select("*").order("name")
+    const { data, error } = await supabase
+      .from("carport_models")
+      .select(`
+        *,
+        structure_type:carport_structure_types!carport_models_structure_type_id_fkey(name, structure_category)
+      `)
+      .order("name")
 
     if (error) {
       console.error("Error fetching models:", error)
@@ -45,7 +80,6 @@ export default function ModelsPage() {
     const supabase = createClient()
 
     if (editingModel.id) {
-      // Update existing model
       const { error } = await supabase
         .from("carport_models")
         .update({
@@ -53,6 +87,7 @@ export default function ModelsPage() {
           description: editingModel.description,
           base_price: editingModel.base_price,
           image: editingModel.image,
+          structure_type_id: editingModel.structure_type_id || null,
           updated_at: new Date().toISOString(),
         })
         .eq("id", editingModel.id)
@@ -62,13 +97,13 @@ export default function ModelsPage() {
         return
       }
     } else {
-      // Create new model
       const { error } = await supabase.from("carport_models").insert([
         {
           name: editingModel.name,
           description: editingModel.description,
           base_price: editingModel.base_price,
           image: editingModel.image,
+          structure_type_id: editingModel.structure_type_id || null,
         },
       ])
 
@@ -92,10 +127,33 @@ export default function ModelsPage() {
     if (!confirm("Sei sicuro di voler eliminare questo modello?")) return
 
     const supabase = createClient()
+
+    const { data: configurationsUsingModel, error: checkError } = await supabase
+      .from("carport_configurations")
+      .select("id, customer_name")
+      .eq("model_id", id)
+      .limit(5)
+
+    if (checkError) {
+      console.error("Error checking model usage:", checkError)
+      alert("Errore durante la verifica dell'utilizzo del modello")
+      return
+    }
+
+    if (configurationsUsingModel && configurationsUsingModel.length > 0) {
+      const customerNames = configurationsUsingModel.map((config) => config.customer_name).join(", ")
+      const moreText = configurationsUsingModel.length === 5 ? " e altri..." : ""
+      alert(
+        `Impossibile eliminare il modello. È utilizzato in ${configurationsUsingModel.length} configurazione/i di: ${customerNames}${moreText}.\n\nElimina prima le configurazioni che utilizzano questo modello.`,
+      )
+      return
+    }
+
     const { error } = await supabase.from("carport_models").delete().eq("id", id)
 
     if (error) {
       console.error("Error deleting model:", error)
+      alert("Errore durante l'eliminazione del modello")
     } else {
       fetchModels()
     }
@@ -104,6 +162,13 @@ export default function ModelsPage() {
   const handleCancel = () => {
     setIsEditing(false)
     setEditingModel({})
+  }
+
+  const getStructureTypeName = (model: any) => {
+    if (model.structure_type) {
+      return `${model.structure_type.name} (${model.structure_type.structure_category})`
+    }
+    return "Nessun tipo assegnato"
   }
 
   if (loading) {
@@ -117,7 +182,6 @@ export default function ModelsPage() {
   return (
     <AdminLayout>
       <div className="space-y-6">
-        {/* Add/Edit Form */}
         {isEditing && (
           <Card>
             <CardHeader>
@@ -150,6 +214,25 @@ export default function ModelsPage() {
                 />
               </div>
               <div>
+                <Label htmlFor="structure_type">Tipo di Struttura</Label>
+                <select
+                  id="structure_type"
+                  value={editingModel.structure_type_id || ""}
+                  onChange={(e) => setEditingModel({ ...editingModel, structure_type_id: e.target.value || null })}
+                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                >
+                  <option value="">Seleziona tipo di struttura</option>
+                  {structureTypes.map((structureType) => (
+                    <option key={structureType.id} value={structureType.id}>
+                      {structureType.name} ({structureType.structure_category})
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  Collega questo modello a un tipo di struttura per filtrare le opzioni nel configuratore
+                </p>
+              </div>
+              <div>
                 <ImageUpload
                   currentImage={editingModel.image}
                   onImageUploaded={(url) => setEditingModel({ ...editingModel, image: url })}
@@ -169,7 +252,6 @@ export default function ModelsPage() {
           </Card>
         )}
 
-        {/* Models List */}
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -187,10 +269,14 @@ export default function ModelsPage() {
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {models.map((model) => (
                 <div key={model.id} className="border rounded-lg p-4 bg-green-50">
-                  <img
+                  <Image
                     src={model.image || "/placeholder.svg?height=200&width=300&query=carport model"}
                     alt={model.name}
+                    width={300}
+                    height={200}
                     className="w-full h-48 object-cover rounded-lg mb-4"
+                    placeholder="blur"
+                    blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
                     onError={(e) => {
                       const target = e.target as HTMLImageElement
                       target.src = "/placeholder.svg?height=200&width=300"
@@ -198,6 +284,9 @@ export default function ModelsPage() {
                   />
                   <h3 className="font-semibold text-green-800 mb-2">{model.name}</h3>
                   <p className="text-green-600 text-sm mb-3">{model.description}</p>
+                  <p className="text-xs text-gray-600 mb-2">
+                    <strong>Tipo:</strong> {getStructureTypeName(model)}
+                  </p>
                   <p className="font-semibold text-green-800 mb-4">€{model.base_price.toLocaleString()}</p>
                   <div className="flex gap-2">
                     <Button size="sm" variant="outline" onClick={() => handleEdit(model)} className="bg-transparent">

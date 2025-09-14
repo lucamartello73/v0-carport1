@@ -52,7 +52,7 @@ export default function SurfacesPage() {
           name: editingSurface.name,
           description: editingSurface.description,
           price_per_sqm: editingSurface.price_per_sqm,
-          image: editingSurface.image, // added image field
+          image: editingSurface.image === "" ? null : editingSurface.image,
           updated_at: new Date().toISOString(),
         })
         .eq("id", editingSurface.id)
@@ -68,7 +68,7 @@ export default function SurfacesPage() {
           name: editingSurface.name,
           description: editingSurface.description,
           price_per_sqm: editingSurface.price_per_sqm,
-          image: editingSurface.image, // added image field
+          image: editingSurface.image === "" ? null : editingSurface.image,
         },
       ])
 
@@ -92,10 +92,29 @@ export default function SurfacesPage() {
     if (!confirm("Sei sicuro di voler eliminare questa superficie?")) return
 
     const supabase = createClient()
+
+    const { data: referencedConfigs, error: checkError } = await supabase
+      .from("carport_configurations")
+      .select("id")
+      .eq("surface_id", id)
+      .limit(1)
+
+    if (checkError) {
+      console.error("Error checking surface references:", checkError)
+      alert("Errore durante il controllo dei riferimenti alla superficie.")
+      return
+    }
+
+    if (referencedConfigs && referencedConfigs.length > 0) {
+      alert("Impossibile eliminare questa superficie perché è utilizzata in alcune configurazioni esistenti.")
+      return
+    }
+
     const { error } = await supabase.from("carport_surfaces").delete().eq("id", id)
 
     if (error) {
       console.error("Error deleting surface:", error)
+      alert("Errore durante l'eliminazione della superficie.")
     } else {
       fetchSurfaces()
     }
@@ -156,6 +175,7 @@ export default function SurfacesPage() {
                 <ImageUpload
                   currentImage={editingSurface.image}
                   onImageUploaded={(url) => setEditingSurface({ ...editingSurface, image: url })}
+                  onImageRemoved={() => setEditingSurface({ ...editingSurface, image: "" })}
                   folder="surfaces"
                   label="Immagine Superficie"
                 />

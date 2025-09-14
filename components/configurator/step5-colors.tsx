@@ -4,61 +4,34 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import type { ConfigurationData } from "@/app/configuratore/page"
+import { createClient } from "@/lib/supabase/client"
+import type { ConfigurationData } from "@/types/configuration"
 
 interface Step5Props {
   configuration: Partial<ConfigurationData>
   updateConfiguration: (data: Partial<ConfigurationData>) => void
 }
 
-const colorOptions = {
-  ral: [
-    { id: "ral-9005", name: "Nero Intenso", hex: "#0A0A0A" },
-    { id: "ral-7016", name: "Grigio Antracite", hex: "#383E42" },
-    { id: "ral-9006", name: "Alluminio Bianco", hex: "#A5A5A5" },
-    { id: "ral-6005", name: "Verde Muschio", hex: "#2F4F2F" },
-    { id: "ral-3009", name: "Rosso Ossido", hex: "#642424" },
-  ],
-  smalto: [
-    { id: "smalto-bianco", name: "Bianco Opaco", hex: "#F8F8FF" },
-    { id: "smalto-nero", name: "Nero Opaco", hex: "#2F2F2F" },
-    { id: "smalto-grigio", name: "Grigio Perla", hex: "#C0C0C0" },
-    { id: "smalto-verde", name: "Verde Salvia", hex: "#87A96B" },
-    { id: "smalto-blu", name: "Blu Petrolio", hex: "#4682B4" },
-  ],
-  impregnante_classico: [
-    { id: "imp-noce", name: "Noce", hex: "#8B4513" },
-    { id: "imp-mogano", name: "Mogano", hex: "#C04000" },
-    { id: "imp-frassino", name: "Frassino", hex: "#D2B48C" },
-    { id: "imp-teak", name: "Teak", hex: "#B8860B" },
-    { id: "imp-rovere", name: "Rovere", hex: "#DEB887" },
-  ],
-  impregnante_pastello: [
-    { id: "past-azzurro", name: "Azzurro Pastello", hex: "#B0E0E6" },
-    { id: "past-rosa", name: "Rosa Pastello", hex: "#FFB6C1" },
-    { id: "past-verde", name: "Verde Pastello", hex: "#98FB98" },
-    { id: "past-giallo", name: "Giallo Pastello", hex: "#FFFFE0" },
-    { id: "past-lilla", name: "Lilla Pastello", hex: "#DDA0DD" },
-  ],
+interface Color {
+  id: string
+  name: string
+  hex_value: string
+  price_modifier: number
+  macro_category: string
+  is_custom_choice: boolean
+  display_order: number
 }
 
 export function Step5Colors({ configuration, updateConfiguration }: Step5Props) {
   const [selectedStructureColor, setSelectedStructureColor] = useState(configuration.structureColor || "")
   const [customColor, setCustomColor] = useState("")
   const [showCustomInput, setShowCustomInput] = useState(false)
+  const [availableColors, setAvailableColors] = useState<Color[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const getColorCategory = () => {
-    const material = configuration.material
-    if (material === "acciaio") return "ral"
-    if (material === "legno") {
-      // For now, default to smalto for wood, but this could be expanded
-      return "smalto"
-    }
-    return "ral" // default fallback
-  }
-
-  const colorCategory = getColorCategory()
-  const availableColors = colorOptions[colorCategory] || colorOptions.ral
+  useEffect(() => {
+    fetchColorsForModel() // Changed from fetchColorsForStructureType to fetchColorsForModel
+  }, [configuration.modelId]) // Changed dependency from structureType to modelId
 
   useEffect(() => {
     updateConfiguration({
@@ -66,20 +39,84 @@ export function Step5Colors({ configuration, updateConfiguration }: Step5Props) 
     })
   }, [selectedStructureColor, updateConfiguration])
 
-  const getCategoryTitle = () => {
-    switch (colorCategory) {
-      case "ral":
-        return "Colori RAL per Acciaio"
-      case "smalto":
-        return "Smalto Coprente per Legno"
-      case "impregnante_classico":
-        return "Impregnanti Legno Classici"
-      case "impregnante_pastello":
-        return "Impregnanti Colore Pastello"
+  const fetchColorsForModel = async () => {
+    // Renamed function and updated logic to use model instead of structure type
+    if (!configuration.modelId) {
+      console.log("[v0] No model selected, showing all colors")
+      setLoading(false)
+      return
+    }
+
+    try {
+      console.log("[v0] Fetching colors for model ID:", configuration.modelId)
+      const supabase = createClient()
+
+      // Get all colors from database
+      const { data: colorsData, error: colorsError } = await supabase.from("carport_colors").select("*").order("name")
+
+      if (colorsError) {
+        console.error("[v0] Error fetching colors:", colorsError)
+        throw colorsError
+      }
+
+      console.log("[v0] All colors fetched:", colorsData)
+
+      // Transform colors to include macro_category mapping
+      const transformedColors: Color[] = (colorsData || []).map((color, index) => ({
+        id: color.id,
+        name: color.name,
+        hex_value: color.hex_value,
+        price_modifier: color.price_modifier || 0,
+        macro_category:
+          color.category === "smalti_ral"
+            ? "COLORI_RAL"
+            : color.category === "impregnanti_legno"
+              ? "IMPREGNANTI_LEGNO"
+              : color.category === "impregnanti_pastello"
+                ? "IMPREGNANTI_PASTELLO"
+                : color.category === "structure"
+                  ? "COLORI_RAL"
+                  : color.category === "coverage"
+                    ? "IMPREGNANTI_LEGNO"
+                    : "COLORI_RAL", // fallback
+        is_custom_choice:
+          color.name?.toLowerCase().includes("scelta") || color.name?.toLowerCase().includes("personalizzat") || false,
+        display_order: color.display_order || index,
+      }))
+
+      // For now, show all colors regardless of model
+      // TODO: Implement proper filtering based on model-macrocategory links from admin
+      console.log("[v0] Transformed colors:", transformedColors)
+      setAvailableColors(transformedColors)
+    } catch (error) {
+      console.error("Error fetching colors:", error)
+      setAvailableColors([])
+    }
+    setLoading(false)
+  }
+
+  const getMacroCategoryTitle = (macroCategory: string) => {
+    switch (macroCategory) {
+      case "COLORI_RAL":
+        return "COLORI RAL 5+1"
+      case "IMPREGNANTI_LEGNO":
+        return "IMPREGNANTI LEGNO 5+1"
+      case "IMPREGNANTI_PASTELLO":
+        return "IMPREGNANTI PASTELLO 5+1"
       default:
         return "Colori Struttura"
     }
   }
+
+  const groupedColors = availableColors.reduce(
+    (acc, color) => {
+      const macroCategory = color.macro_category || "SENZA_CATEGORIA"
+      if (!acc[macroCategory]) acc[macroCategory] = []
+      acc[macroCategory].push(color)
+      return acc
+    },
+    {} as Record<string, Color[]>,
+  )
 
   const handleCustomColorSubmit = () => {
     if (customColor.trim()) {
@@ -88,69 +125,106 @@ export function Step5Colors({ configuration, updateConfiguration }: Step5Props) 
     }
   }
 
+  if (loading) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-gray-600">Caricamento colori disponibili...</p>
+      </div>
+    )
+  }
+
+  if (!configuration.modelId) {
+    // Changed condition from structureType to modelId
+    return (
+      <div className="text-center py-8">
+        <p className="text-gray-600">Seleziona prima il modello per vedere i colori disponibili.</p>{" "}
+        {/* Updated message */}
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-8">
       <div className="text-center">
         <p className="text-gray-800 text-lg">Seleziona il colore per la struttura</p>
-        <p className="text-gray-600 text-sm mt-2">
-          {configuration.material === "acciaio"
-            ? "Colori RAL per struttura in acciaio"
-            : "Colori per struttura in legno"}
-        </p>
+        <p className="text-gray-600 text-sm mt-2">Colori disponibili per il modello selezionato</p>{" "}
+        {/* Updated message */}
       </div>
 
-      {/* Structure Colors */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-gray-900">{getCategoryTitle()}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
-            {availableColors.map((color) => (
-              <div
-                key={color.id}
-                className={`cursor-pointer p-4 rounded-lg border-2 transition-all ${
-                  selectedStructureColor === color.id
-                    ? "border-orange-500 bg-orange-50"
-                    : "border-gray-200 hover:border-green-300"
-                }`}
-                onClick={() => setSelectedStructureColor(color.id)}
-              >
-                <div className="w-full h-16 rounded-lg mb-2 border" style={{ backgroundColor: color.hex }} />
-                <p className="text-sm font-medium text-gray-900 text-center">{color.name}</p>
-              </div>
-            ))}
-          </div>
+      {Object.entries(groupedColors).map(([macroCategory, colors]) => (
+        <Card key={macroCategory}>
+          <CardHeader>
+            <CardTitle className="text-gray-900">{getMacroCategoryTitle(macroCategory)}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+              {colors
+                .filter((color) => !color.is_custom_choice)
+                .map((color) => (
+                  <div
+                    key={color.id}
+                    className={`cursor-pointer p-4 rounded-lg border-2 transition-all ${
+                      selectedStructureColor === color.id
+                        ? "border-orange-500 bg-orange-50"
+                        : "border-gray-200 hover:border-green-300"
+                    }`}
+                    onClick={() => setSelectedStructureColor(color.id)}
+                  >
+                    <div className="w-full h-16 rounded-lg mb-2 border" style={{ backgroundColor: color.hex_value }} />
+                    <p className="text-sm font-medium text-gray-900 text-center mb-1">{color.name}</p>
+                    {color.price_modifier > 0 && (
+                      <p className="text-xs text-green-600 text-center">+€{color.price_modifier}</p>
+                    )}
+                  </div>
+                ))}
+            </div>
 
-          <div className="border-t pt-6">
-            <h4 className="text-lg font-semibold text-gray-900 mb-4">Colore Personalizzato</h4>
-            {!showCustomInput ? (
-              <Button
-                variant="outline"
-                onClick={() => setShowCustomInput(true)}
-                className="border-dashed border-2 border-gray-300 hover:border-green-400 text-gray-600 hover:text-green-700"
-              >
-                + Aggiungi colore personalizzato
-              </Button>
-            ) : (
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Inserisci il nome del colore personalizzato"
-                  value={customColor}
-                  onChange={(e) => setCustomColor(e.target.value)}
-                  className="flex-1"
-                />
-                <Button onClick={handleCustomColorSubmit} className="bg-green-600 hover:bg-green-700">
-                  Aggiungi
-                </Button>
-                <Button variant="outline" onClick={() => setShowCustomInput(false)}>
-                  Annulla
-                </Button>
+            {colors.some((color) => color.is_custom_choice) && (
+              <div className="border-t pt-6 mt-6">
+                <h4 className="text-lg font-semibold text-gray-900 mb-4">
+                  {colors.find((color) => color.is_custom_choice)?.name || "Scelta Personalizzata"}
+                </h4>
+                {!showCustomInput ? (
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowCustomInput(true)}
+                    className="border-dashed border-2 border-gray-300 hover:border-green-400 text-gray-600 hover:text-green-700"
+                  >
+                    + Scegli colore personalizzato
+                  </Button>
+                ) : (
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Inserisci il codice o nome del colore desiderato"
+                      value={customColor}
+                      onChange={(e) => setCustomColor(e.target.value)}
+                      className="flex-1"
+                    />
+                    <Button onClick={handleCustomColorSubmit} className="bg-green-600 hover:bg-green-700">
+                      Conferma
+                    </Button>
+                    <Button variant="outline" onClick={() => setShowCustomInput(false)}>
+                      Annulla
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      ))}
+
+      {availableColors.length === 0 && (
+        <Card>
+          <CardContent className="text-center py-8">
+            <p className="text-gray-600">Nessun colore disponibile per il modello selezionato.</p>{" "}
+            {/* Updated message */}
+            <p className="text-sm text-gray-500 mt-2">
+              Contatta l'amministratore per configurare i colori per questo modello. {/* Updated message */}
+            </p>
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }
