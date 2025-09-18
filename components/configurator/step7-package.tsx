@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import type { ConfigurationData } from "@/app/configuratore/page"
 import { saveConfiguration } from "@/app/actions/save-configuration"
+import { trackConfiguratorSubmit } from "@/lib/analytics/gtag"
 
 const CheckCircle = ({ className }: { className?: string }) => (
   <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -197,6 +198,15 @@ export function Step7Package({ configuration, updateConfiguration }: Step7Props)
         alert(`Errore nel salvare la configurazione: ${result.error}`)
         return
       }
+
+      trackConfiguratorSubmit({
+        package_type: selectedPackage,
+        contact_preference: contactPreference,
+        customer_city: customerData.city,
+        customer_province: customerData.province,
+        structure_type: configuration.structureType || configuration.structureTypeId,
+        has_dimensions: !!(configuration.width && configuration.depth && configuration.height),
+      })
 
       if (result.data) {
         try {

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 
@@ -14,6 +14,8 @@ import { Step6Surface } from "@/components/configurator/step6-surface"
 import { Step7Package } from "@/components/configurator/step7-package"
 
 import type { ConfigurationData } from "@/types/configuration"
+
+import { initializeGoogleAnalytics, trackConfiguratorStep, setupAbandonTracking } from "@/lib/analytics/gtag"
 
 export type { ConfigurationData }
 
@@ -30,6 +32,32 @@ const steps = [
 export default function ConfiguratorePage() {
   const [currentStep, setCurrentStep] = useState(1)
   const [configuration, setConfiguration] = useState<Partial<ConfigurationData>>({})
+
+  useEffect(() => {
+    // Inizializza Google Analytics
+    initializeGoogleAnalytics("G-XXXXXXXXXX")
+
+    // Traccia il primo step
+    trackConfiguratorStep(`step_${currentStep}_${steps[currentStep - 1].title.toLowerCase().replace(" ", "_")}`)
+
+    // Configura tracking abbandono
+    const cleanup = setupAbandonTracking(
+      () => `step_${currentStep}_${steps[currentStep - 1].title.toLowerCase().replace(" ", "_")}`,
+    )
+
+    return cleanup
+  }, [])
+
+  useEffect(() => {
+    if (currentStep > 1) {
+      // Non tracciare il primo step due volte
+      const stepName = `step_${currentStep}_${steps[currentStep - 1].title.toLowerCase().replace(" ", "_")}`
+      trackConfiguratorStep(stepName, {
+        previous_step: currentStep - 1,
+        configuration_progress: Math.round((currentStep / 7) * 100),
+      })
+    }
+  }, [currentStep])
 
   const updateConfiguration = useCallback((data: Partial<ConfigurationData>) => {
     setConfiguration((prev) => ({ ...prev, ...data }))
