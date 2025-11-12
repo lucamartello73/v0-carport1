@@ -20,4 +20,5 @@ export interface ConfigurationData {
   customerCap: string
   customerProvince: string
   contactPreference: string // Added contact preference field
+  accessories?: string[] // Array di ID accessori selezionati (solo per legno)
 }
