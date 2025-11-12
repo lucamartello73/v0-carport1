@@ -7,7 +7,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import Link from "next/link"
 
 // Import step components per configuratore Legno
-import { Step1PergolaType } from "@/components/configurator/legno/step1-pergola-type"
+import { Step1StructureType } from "@/components/configurator/legno/step1-structure-type"
 import { Step2Dimensions } from "@/components/configurator/legno/step2-dimensions"
 import { Step3Coverage } from "@/components/configurator/legno/step3-coverage"
 import { Step4Colors } from "@/components/configurator/legno/step4-colors"
@@ -22,7 +22,7 @@ import { initializeGoogleAnalytics, trackConfiguratorStep, setupAbandonTracking 
 export type { ConfigurationData }
 
 const steps = [
-  { id: 1, title: "Tipo Pergola", description: "Scegli il tipo di pergola", icon: "🌳" },
+  { id: 1, title: "Tipo Struttura", description: "Scegli il tipo di struttura", icon: "🌳" },
   { id: 2, title: "Dimensioni", description: "Imposta le dimensioni", icon: "📏" },
   { id: 3, title: "Copertura", description: "Scegli la copertura", icon: "🏡" },
   { id: 4, title: "Colori", description: "Seleziona le tinte legno", icon: "🎨" },
@@ -63,9 +63,9 @@ export default function ConfiguratoreLegnoPage() {
 
   const validateCurrentStep = (): { valid: boolean; error: string } => {
     switch (currentStep) {
-      case 1: // Pergola type
-        if (!configuration.modelId) {
-          return { valid: false, error: "⚠️ Seleziona un tipo di pergola per proseguire" }
+      case 1: // Structure type
+        if (!configuration.structureTypeId) {
+          return { valid: false, error: "⚠️ Seleziona un tipo di struttura per proseguire" }
         }
         break
       case 2: // Dimensions
@@ -128,7 +128,7 @@ export default function ConfiguratoreLegnoPage() {
   const renderStep = () => {
     switch (currentStep) {
       case 1:
-        return <Step1PergolaType configuration={configuration} updateConfiguration={updateConfiguration} />
+        return <Step1StructureType configuration={configuration} updateConfiguration={updateConfiguration} />
       case 2:
         return <Step2Dimensions configuration={configuration} updateConfiguration={updateConfiguration} />
       case 3:
@@ -157,8 +157,8 @@ export default function ConfiguratoreLegnoPage() {
   const progress = (currentStep / 6) * 100
 
   const headerStyle = {
-    background: "linear-gradient(to right, #16a34a, #059669)",
-    backgroundColor: "#16a34a",
+    background: "linear-gradient(to right, #008f4c, #00703c)",
+    backgroundColor: "#008f4c",
     color: "#ffffff",
     padding: "24px",
     display: "flex",
@@ -189,7 +189,7 @@ export default function ConfiguratoreLegnoPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-green-100 to-emerald-50">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
@@ -202,8 +202,8 @@ export default function ConfiguratoreLegnoPage() {
             </Button>
           </Link>
           <div className="text-center flex-1">
-            <h1 className="text-3xl font-bold text-green-800 mb-2">Configuratore Strutture in Legno</h1>
-            <p className="text-green-700">
+            <h1 className="text-3xl font-bold text-[#008f4c] mb-2">Configuratore Coperture Auto in Legno</h1>
+            <p className="text-gray-700">
               Passaggio {currentStep} di 6: {steps[currentStep - 1].title}
             </p>
           </div>
@@ -235,7 +235,7 @@ export default function ConfiguratoreLegnoPage() {
                 <div
                   className={`w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 ${
                     step.id <= currentStep
-                      ? "bg-green-600 text-white shadow-lg border-2 border-green-700"
+                      ? "bg-[#008f4c] text-white shadow-lg border-2 border-green-700"
                       : "bg-gray-200 text-gray-700 border-2 border-gray-300"
                   }`}
                 >
@@ -252,7 +252,7 @@ export default function ConfiguratoreLegnoPage() {
                   )}
                 </div>
                 <span
-                  className={`text-xs mt-2 font-medium hidden md:block ${step.id <= currentStep ? "text-green-800" : "text-gray-600"}`}
+                  className={`text-xs mt-2 font-medium hidden md:block ${step.id <= currentStep ? "text-[#008f4c]" : "text-gray-600"}`}
                 >
                   {step.title}
                 </span>
@@ -280,7 +280,7 @@ export default function ConfiguratoreLegnoPage() {
             variant="outline"
             onClick={prevStep}
             disabled={currentStep === 1}
-            className="flex items-center gap-2 bg-white border-green-300 text-green-700 hover:bg-green-50 disabled:opacity-50"
+            className="flex items-center gap-2 bg-white border-green-300 text-gray-700 hover:bg-green-50 disabled:opacity-50"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
