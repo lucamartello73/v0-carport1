@@ -43,6 +43,7 @@ export function Step4Coverage({ configuration, updateConfiguration }: Step4Props
             )
           `)
           .eq("carport_coverage_structure_types.structure_type_id", configuration.structureTypeId)
+          .not('name', 'ilike', '%Perlinato con guaina ardesiata%')
           .order("name")
 
         if (error) {
@@ -52,6 +53,7 @@ export function Step4Coverage({ configuration, updateConfiguration }: Step4Props
           const { data: fallbackData, error: fallbackError } = await supabase
             .from(tableName)
             .select("*")
+            .not('name', 'ilike', '%Perlinato con guaina ardesiata%')
             .order("name")
 
           if (fallbackError) {
@@ -66,7 +68,11 @@ export function Step4Coverage({ configuration, updateConfiguration }: Step4Props
       } else {
         // If no structure type selected, show all coverage types
         console.log("[v0] No structure type selected, showing all coverage types")
-        const { data, error } = await supabase.from("carport_coverage_types").select("*").order("name")
+        const { data, error } = await supabase
+          .from("carport_coverage_types")
+          .select("*")
+          .not('name', 'ilike', '%Perlinato con guaina ardesiata%')
+          .order("name")
 
         if (error) {
           console.error("Error fetching coverage types:", error)

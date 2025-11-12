@@ -13,16 +13,16 @@ interface Step3Props {
 }
 
 const carSpotsData = [
-  { spots: 1, width: 230, depth: 400, height: 200, label: "1 Posto Auto" },
-  { spots: 2, width: 460, depth: 400, height: 200, label: "2 Posti Auto" },
-  { spots: 3, width: 690, depth: 400, height: 200, label: "3 Posti Auto" },
-  { spots: 4, width: 920, depth: 400, height: 200, label: "4 Posti Auto" },
-  { spots: 5, width: 1150, depth: 400, height: 200, label: "5+ Posti Auto" },
+  { spots: 1, width: 250, depth: 400, height: 200, label: "1 Posto Auto" },
+  { spots: 2, width: 500, depth: 400, height: 200, label: "2 Posti Auto" },
+  { spots: 3, width: 750, depth: 400, height: 200, label: "3 Posti Auto" },
+  { spots: 4, width: 1000, depth: 400, height: 200, label: "4 Posti Auto" },
+  { spots: 5, width: 1250, depth: 400, height: 200, label: "5+ Posti Auto" },
 ]
 
 export function Step3Dimensions({ configuration, updateConfiguration }: Step3Props) {
   const [carSpots, setCarSpots] = useState(configuration.carSpots || 1)
-  const [width, setWidth] = useState(configuration.width || 230)
+  const [width, setWidth] = useState(configuration.width || 250)
   const [depth, setDepth] = useState(configuration.depth || 400)
   const [height, setHeight] = useState(configuration.height || 200)
 
@@ -42,9 +42,14 @@ export function Step3Dimensions({ configuration, updateConfiguration }: Step3Pro
 
   return (
     <div className="space-y-8">
-      <p className="text-gray-800 text-center text-lg">
-        Seleziona il numero di posti auto e personalizza le dimensioni
-      </p>
+      <div className="text-center">
+        <p className="text-gray-800 text-lg">
+          Seleziona il numero di posti auto e personalizza le dimensioni
+        </p>
+        <p className="text-green-600 font-medium mt-2">
+          💡 Dimensione consigliata: 2,50 × 4 m (larghezza × profondità)
+        </p>
+      </div>
 
       <div className="space-y-6">
         <h3 className="text-xl font-semibold text-gray-900 text-center">Quanti posti auto?</h3>
@@ -108,7 +113,7 @@ export function Step3Dimensions({ configuration, updateConfiguration }: Step3Pro
               type="number"
               value={width}
               onChange={(e) => setWidth(Number(e.target.value))}
-              min={200}
+              min={230}
               max={1500}
               className="w-full"
             />

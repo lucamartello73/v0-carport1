@@ -52,9 +52,13 @@ export function Step5Colors({ configuration, updateConfiguration }: Step5Props) 
       console.log("[v0] Fetching colors for model ID:", configuration.modelId)
       const supabase = createClient()
 
-      // Get all colors from database
+      // Get only RAL colors for steel/aluminum (smalti_ral category)
       const tableName = getTableName('acciaio', 'colors')
-      const { data: colorsData, error: colorsError } = await supabase.from(tableName).select("*").order("name")
+      const { data: colorsData, error: colorsError } = await supabase
+        .from(tableName)
+        .select("*")
+        .eq('category', 'smalti_ral')
+        .order("name")
 
       if (colorsError) {
         console.error("[v0] Error fetching colors:", colorsError)
@@ -63,26 +67,15 @@ export function Step5Colors({ configuration, updateConfiguration }: Step5Props) 
 
       console.log("[v0] All colors fetched:", colorsData)
 
-      // Transform colors to include macro_category mapping
+      // Transform RAL colors
       const transformedColors: Color[] = (colorsData || []).map((color, index) => ({
         id: color.id,
         name: color.name,
         hex_value: color.hex_value,
         price_modifier: color.price_modifier || 0,
-        macro_category:
-          color.category === "smalti_ral"
-            ? "COLORI_RAL"
-            : color.category === "impregnanti_legno"
-              ? "IMPREGNANTI_LEGNO"
-              : color.category === "impregnanti_pastello"
-                ? "IMPREGNANTI_PASTELLO"
-                : color.category === "structure"
-                  ? "COLORI_RAL"
-                  : color.category === "coverage"
-                    ? "IMPREGNANTI_LEGNO"
-                    : "COLORI_RAL", // fallback
+        macro_category: "COLORI_RAL",
         is_custom_choice:
-          color.name?.toLowerCase().includes("scelta") || color.name?.toLowerCase().includes("personalizzat") || false,
+          color.name?.toLowerCase().includes("scelta") || color.name?.toLowerCase().includes("cliente") || false,
         display_order: color.display_order || index,
       }))
 
@@ -100,7 +93,7 @@ export function Step5Colors({ configuration, updateConfiguration }: Step5Props) 
   const getMacroCategoryTitle = (macroCategory: string) => {
     switch (macroCategory) {
       case "COLORI_RAL":
-        return "COLORI RAL 5+1"
+        return "🎨 COLORI RAL STRUTTURA ACCIAIO/ALLUMINIO"
       case "IMPREGNANTI_LEGNO":
         return "IMPREGNANTI LEGNO 5+1"
       case "IMPREGNANTI_PASTELLO":

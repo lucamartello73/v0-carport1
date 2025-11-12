@@ -36,14 +36,12 @@ export function Step1StructureType({ configuration, updateConfiguration }: Step1
         const supabase = createClient()
         const tableName = getTableName('acciaio', 'structure_types')
 
-        let query = supabase.from(tableName).select("*").eq("is_active", true).order("name")
-
-        // If a model is selected, filter structure types by model_id
-        if (configuration.modelId) {
-          query = query.eq("model_id", configuration.modelId)
-        }
-
-        const { data, error } = await query
+        // Filtra solo categorie base per acciaio: Autoportante e Addossato
+        const { data, error } = await supabase
+          .from(tableName)
+          .select("*")
+          .or('name.ilike.%Autoportante Acciaio%,name.ilike.%Addossato Acciaio%')
+          .order("name")
 
         if (error) {
           console.error("Error loading structure types:", error)

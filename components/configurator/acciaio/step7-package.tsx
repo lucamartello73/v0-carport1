@@ -202,7 +202,7 @@ export function Step7Package({ configuration, updateConfiguration, onValidationE
         package_type: selectedPackage,
         contact_preference: contactPreference,
         total_price: 0,
-        status: "nuovo",
+        status: "submitted",
       }
 
       const result = await saveConfiguration(configurationData)
