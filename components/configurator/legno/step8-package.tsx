@@ -77,7 +77,7 @@ const MessageCircle = ({ className }: { className?: string }) => (
   </svg>
 )
 
-interface Step7Props {
+interface Step8Props {
   configuration: Partial<ConfigurationData>
   updateConfiguration: (data: Partial<ConfigurationData>) => void
   onValidationError?: (error: string) => void // Added validation error callback
@@ -112,7 +112,7 @@ const packageTypes = [
   },
 ]
 
-export function Step7Package({ configuration, updateConfiguration, onValidationError }: Step7Props) {
+export function Step8Package({ configuration, updateConfiguration, onValidationError }: Step8Props) {
   const [selectedPackage, setSelectedPackage] = useState(configuration.packageType || "")
   const [contactPreference, setContactPreference] = useState(configuration.contactPreference || "email")
   const [customerData, setCustomerData] = useState({
