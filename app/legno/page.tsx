@@ -299,7 +299,7 @@ export default function ConfiguratoreLegnoPage() {
             Indietro
           </Button>
 
-          {currentStep < 6 && (
+          {currentStep < 7 && (
             <button
               onClick={nextStep}
               style={{
