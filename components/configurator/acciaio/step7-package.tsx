@@ -183,6 +183,7 @@ export function Step7Package({ configuration, updateConfiguration, onValidationE
 
     try {
       const configurationData = {
+        configurator_type: 'acciaio' as const,
         structure_type: configuration.structureType || configuration.structureTypeId || "",
         model_id: configuration.modelId,
         width: configuration.width || 0,
