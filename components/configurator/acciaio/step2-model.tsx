@@ -2,9 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { Card, CardContent } from "@/components/ui/card"
-import { createClient } from "@/lib/supabase/client"
-import { getImageUrl, getFallbackImageUrl } from "@/lib/utils/image-utils"
-import { getTableName } from "@/lib/supabase/tables"
+import { fetchConfiguratorData, getImageUrlOrPlaceholder } from "@/lib/supabase/fetchConfiguratorData"
+import { getFallbackImageUrl } from "@/lib/utils/image-utils"
 import type { ConfigurationData } from "@/types/configuration"
 import Image from "next/image"
 
@@ -30,13 +29,15 @@ export function Step2Model({ configuration, updateConfiguration }: Step2Props) {
 
   useEffect(() => {
     const fetchModels = async () => {
-      const supabase = createClient()
-      const tableName = getTableName('acciaio', 'models')
-      const { data, error } = await supabase.from(tableName).select("*").order("name")
+      const { data, error } = await fetchConfiguratorData<Model>({
+        material: 'acciaio',
+        table: 'models'
+      })
 
       if (error) {
-        console.error("Error fetching models:", error)
+        console.error("[Acciaio] Error fetching models:", error)
       } else {
+        console.log("[Acciaio] Loaded models:", data)
         setAllModels(data || [])
       }
       setLoading(false)
@@ -105,7 +106,7 @@ export function Step2Model({ configuration, updateConfiguration }: Step2Props) {
           >
             <CardContent className="p-6">
               <Image
-                src={getImageUrl(model.image) || "/placeholder.svg"}
+                src={getImageUrlOrPlaceholder(model.image, 'model') || getFallbackImageUrl("model")}
                 alt={model.name}
                 width={300}
                 height={200}

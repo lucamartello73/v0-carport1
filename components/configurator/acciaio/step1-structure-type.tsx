@@ -3,9 +3,8 @@
 import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
-import { createClient } from "@/lib/supabase/client"
-import { getImageUrl, getFallbackImageUrl } from "@/lib/utils/image-utils"
-import { getTableName } from "@/lib/supabase/tables"
+import { fetchConfiguratorData, getImageUrlOrPlaceholder } from "@/lib/supabase/fetchConfiguratorData"
+import { getFallbackImageUrl } from "@/lib/utils/image-utils"
 import type { ConfigurationData } from "@/types/configuration"
 
 interface Step1Props {
@@ -33,33 +32,28 @@ export function Step1StructureType({ configuration, updateConfiguration }: Step1
   useEffect(() => {
     const loadStructureTypes = async () => {
       try {
-        const supabase = createClient()
-        const tableName = getTableName('acciaio', 'structure_types')
-
-        // Filtra solo categorie base per acciaio: Autoportante e Addossato
-        const { data, error } = await supabase
-          .from(tableName)
-          .select("*")
-          .or('name.ilike.%Autoportante Acciaio%,name.ilike.%Addossato Acciaio%')
-          .order("name")
+        // Usa helper centralizzato con filtro automatico materiale='acciaio'
+        const { data, error } = await fetchConfiguratorData<StructureType>({
+          material: 'acciaio',
+          table: 'structure_types'
+        })
 
         if (error) {
-          console.error("Error loading structure types:", error)
+          console.error("[Acciaio] Error loading structure types:", error)
           return
         }
 
-        console.log("[Acciaio] Loaded structure types from database:", data)
-        console.log("[Acciaio] Filtered by model ID:", configuration.modelId)
+        console.log("[Acciaio] Loaded structure types:", data)
         setStructureTypes(data || [])
       } catch (error) {
-        console.error("Error loading structure types:", error)
+        console.error("[Acciaio] Error loading structure types:", error)
       } finally {
         setIsLoading(false)
       }
     }
 
     loadStructureTypes()
-  }, [configuration.modelId])
+  }, [])
 
   useEffect(() => {
     if (selectedType) {
@@ -110,7 +104,7 @@ export function Step1StructureType({ configuration, updateConfiguration }: Step1
             <CardContent className="p-6">
               <div className="relative overflow-hidden rounded-lg mb-4">
                 <img
-                  src={getImageUrl(type.image) || "/placeholder.svg"}
+                  src={getImageUrlOrPlaceholder(type.image, 'structure') || getFallbackImageUrl("structure")}
                   alt={type.name}
                   className="w-full h-48 object-cover transition-transform duration-300 hover:scale-105"
                   onError={(e) => {

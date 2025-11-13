@@ -2,9 +2,8 @@
 
 import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
-import { createClient } from "@/lib/supabase/client"
-import { getImageUrl, getFallbackImageUrl } from "@/lib/utils/image-utils"
-import { getTableName } from "@/lib/supabase/tables"
+import { fetchConfiguratorData, getImageUrlOrPlaceholder } from "@/lib/supabase/fetchConfiguratorData"
+import { getFallbackImageUrl } from "@/lib/utils/image-utils"
 import type { ConfigurationData } from "@/types/configuration"
 
 interface Step4Props {
@@ -27,65 +26,28 @@ export function Step4Coverage({ configuration, updateConfiguration }: Step4Props
 
   useEffect(() => {
     const fetchCoverageTypes = async () => {
-      const supabase = createClient()
-
-      if (configuration.structureTypeId) {
-        console.log("[v0] Fetching coverage types for structure type:", configuration.structureTypeId)
-
-        // Get coverage types linked to the selected structure type
-        const tableName = getTableName('acciaio', 'coverage_types')
-        const { data, error } = await supabase
-          .from(tableName)
-          .select(`
-            *,
-            carport_coverage_structure_types!inner(
-              structure_type_id
-            )
-          `)
-          .eq("carport_coverage_structure_types.structure_type_id", configuration.structureTypeId)
-          .not('name', 'ilike', '%Perlinato con guaina ardesiata%')
-          .order("name")
+      try {
+        // Usa helper centralizzato - database acciaio esclude già perlinato
+        const { data, error } = await fetchConfiguratorData<CoverageType>({
+          material: 'acciaio',
+          table: 'coverage_types'
+        })
 
         if (error) {
-          console.error("Error fetching filtered coverage types:", error)
-          // Fallback to all coverage types if filtering fails
-          const tableName = getTableName('acciaio', 'coverage_types')
-          const { data: fallbackData, error: fallbackError } = await supabase
-            .from(tableName)
-            .select("*")
-            .not('name', 'ilike', '%Perlinato con guaina ardesiata%')
-            .order("name")
-
-          if (fallbackError) {
-            console.error("Error fetching fallback coverage types:", fallbackError)
-          } else {
-            setCoverageTypes(fallbackData || [])
-          }
+          console.error("[Acciaio] Error fetching coverage types:", error)
         } else {
-          console.log("[v0] Loaded filtered coverage types:", data)
+          console.log("[Acciaio] Loaded coverage types:", data)
           setCoverageTypes(data || [])
         }
-      } else {
-        // If no structure type selected, show all coverage types
-        console.log("[v0] No structure type selected, showing all coverage types")
-        const { data, error } = await supabase
-          .from("carport_coverage_types")
-          .select("*")
-          .not('name', 'ilike', '%Perlinato con guaina ardesiata%')
-          .order("name")
-
-        if (error) {
-          console.error("Error fetching coverage types:", error)
-        } else {
-          setCoverageTypes(data || [])
-        }
+      } catch (error) {
+        console.error("[Acciaio] Error fetching coverage types:", error)
+      } finally {
+        setLoading(false)
       }
-
-      setLoading(false)
     }
 
     fetchCoverageTypes()
-  }, [configuration.structureTypeId]) // Re-fetch when structure type changes
+  }, []) // Re-fetch when structure type changes
 
   useEffect(() => {
     if (selectedCoverage) {
@@ -137,7 +99,7 @@ export function Step4Coverage({ configuration, updateConfiguration }: Step4Props
           >
             <CardContent className="p-6">
               <img
-                src={getImageUrl(coverage.image) || "/placeholder.svg"}
+                src={getImageUrlOrPlaceholder(coverage.image, 'coverage') || getFallbackImageUrl("coverage")}
                 alt={coverage.name}
                 className="w-full h-48 object-cover rounded-lg mb-4"
                 onError={(e) => {

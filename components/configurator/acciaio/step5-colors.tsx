@@ -4,8 +4,7 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { createClient } from "@/lib/supabase/client"
-import { getTableName } from "@/lib/supabase/tables"
+import { fetchConfiguratorData } from "@/lib/supabase/fetchConfiguratorData"
 import type { ConfigurationData } from "@/types/configuration"
 
 interface Step5Props {
@@ -41,34 +40,31 @@ export function Step5Colors({ configuration, updateConfiguration }: Step5Props) 
   }, [selectedStructureColor, updateConfiguration])
 
   const fetchColorsForModel = async () => {
-    // Renamed function and updated logic to use model instead of structure type
     if (!configuration.modelId) {
-      console.log("[v0] No model selected, showing all colors")
+      console.log("[Acciaio] No model selected, showing all colors")
       setLoading(false)
       return
     }
 
     try {
-      console.log("[v0] Fetching colors for model ID:", configuration.modelId)
-      const supabase = createClient()
+      console.log("[Acciaio] Fetching colors for model ID:", configuration.modelId)
 
-      // Get only RAL colors for steel/aluminum (smalti_ral category)
-      const tableName = getTableName('acciaio', 'colors')
-      const { data: colorsData, error: colorsError } = await supabase
-        .from(tableName)
-        .select("*")
-        .eq('category', 'smalti_ral')
-        .order("name")
+      // Usa helper con filtro automatico per categoria RAL
+      const { data: colorsData, error: colorsError } = await fetchConfiguratorData({
+        material: 'acciaio',
+        table: 'colors',
+        filters: { category: 'smalti_ral' }
+      })
 
       if (colorsError) {
-        console.error("[v0] Error fetching colors:", colorsError)
+        console.error("[Acciaio] Error fetching colors:", colorsError)
         throw colorsError
       }
 
-      console.log("[v0] All colors fetched:", colorsData)
+      console.log("[Acciaio] RAL colors loaded:", colorsData)
 
       // Transform RAL colors
-      const transformedColors: Color[] = (colorsData || []).map((color, index) => ({
+      const transformedColors: Color[] = (colorsData || []).map((color: any, index: number) => ({
         id: color.id,
         name: color.name,
         hex_value: color.hex_value,
@@ -79,12 +75,10 @@ export function Step5Colors({ configuration, updateConfiguration }: Step5Props) 
         display_order: color.display_order || index,
       }))
 
-      // For now, show all colors regardless of model
-      // TODO: Implement proper filtering based on model-macrocategory links from admin
-      console.log("[v0] Transformed colors:", transformedColors)
+      console.log("[Acciaio] Transformed colors:", transformedColors)
       setAvailableColors(transformedColors)
     } catch (error) {
-      console.error("Error fetching colors:", error)
+      console.error("[Acciaio] Error fetching colors:", error)
       setAvailableColors([])
     }
     setLoading(false)

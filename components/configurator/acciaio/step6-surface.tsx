@@ -2,9 +2,8 @@
 
 import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
-import { createClient } from "@/lib/supabase/client"
-import { getImageUrl, getFallbackImageUrl } from "@/lib/utils/image-utils"
-import { getTableName } from "@/lib/supabase/tables"
+import { fetchConfiguratorData, getImageUrlOrPlaceholder } from "@/lib/supabase/fetchConfiguratorData"
+import { getFallbackImageUrl } from "@/lib/utils/image-utils"
 import type { ConfigurationData } from "@/types/configuration"
 
 interface Step6Props {
@@ -30,17 +29,15 @@ export function Step6Surface({ configuration, updateConfiguration }: Step6Props)
 
   useEffect(() => {
     const fetchSurfaces = async () => {
-      const supabase = createClient()
-      const tableName = getTableName('acciaio', 'surfaces')
-      const { data, error } = await supabase.from(tableName).select("*").order("name")
+      const { data, error } = await fetchConfiguratorData<Surface>({
+        material: 'acciaio',
+        table: 'surfaces'
+      })
 
       if (error) {
-        console.error("Error fetching surfaces:", error)
+        console.error("[Acciaio] Error fetching surfaces:", error)
       } else {
-        console.log(
-          "[v0] Loaded surfaces with images:",
-          data?.map((s) => ({ name: s.name, image: s.image })),
-        )
+        console.log("[Acciaio] Loaded surfaces:", data)
         setSurfaces(data || [])
       }
       setLoading(false)
@@ -67,36 +64,29 @@ export function Step6Surface({ configuration, updateConfiguration }: Step6Props)
       </div>
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {surfaces.map((surface) => {
-          const imageUrl = getImageUrl(surface.image)
-          console.log("[v0] Surface:", surface.name, "Image path:", surface.image, "Resolved URL:", imageUrl)
-
-          return (
-            <Card
-              key={surface.id}
-              className={`cursor-pointer transition-all hover:shadow-lg ${
-                selectedSurface === surface.id ? "ring-2 ring-orange-500 bg-orange-50" : "hover:bg-green-50"
-              }`}
-              onClick={() => setSelectedSurface(surface.id)}
-            >
-              <CardContent className="p-6">
-                <img
-                  src={imageUrl || "/placeholder.svg"}
-                  alt={surface.name}
-                  className="w-full h-14 object-cover rounded-lg mb-4"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement
-                    const fallbackUrl = getFallbackImageUrl("surface")
-                    console.log("[v0] Image failed to load for surface:", surface.name, "Using fallback:", fallbackUrl)
-                    target.src = fallbackUrl
-                  }}
-                />
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">{surface.name}</h3>
-                <p className="text-gray-700 mb-3">{surface.description}</p>
-              </CardContent>
-            </Card>
-          )
-        })}
+        {surfaces.map((surface) => (
+          <Card
+            key={surface.id}
+            className={`cursor-pointer transition-all hover:shadow-lg ${
+              selectedSurface === surface.id ? "ring-2 ring-orange-500 bg-orange-50" : "hover:bg-green-50"
+            }`}
+            onClick={() => setSelectedSurface(surface.id)}
+          >
+            <CardContent className="p-6">
+              <img
+                src={getImageUrlOrPlaceholder(surface.image, 'surface') || getFallbackImageUrl("surface")}
+                alt={surface.name}
+                className="w-full h-48 object-cover rounded-lg mb-4"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement
+                  target.src = getFallbackImageUrl("surface")
+                }}
+              />
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">{surface.name}</h3>
+              <p className="text-gray-700 mb-3">{surface.description}</p>
+            </CardContent>
+          </Card>
+        ))}
       </div>
     </div>
   )
