@@ -262,9 +262,9 @@ export function Step7Package({ configuration, updateConfiguration, onValidationE
   if (isSubmitted) {
     return (
       <div className="text-center py-12">
-        <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">Configurazione Inviata!</h2>
-        <p className="text-gray-700 mb-6">
+        <CheckCircle className="w-16 h-16 text-accent-pink mx-auto mb-4" />
+        <h2 className="text-2xl font-bold text-primary mb-4">Configurazione Inviata!</h2>
+        <p className="text-secondary mb-6">
           Grazie per aver configurato il tuo carport. Ti contatteremo presto per finalizzare il progetto e fornirti un
           preventivo personalizzato.
         </p>
@@ -276,8 +276,8 @@ export function Step7Package({ configuration, updateConfiguration, onValidationE
     <div className="space-y-8">
       {/* Package Selection */}
       <div>
-        <h3 className="text-gray-900 font-semibold mb-2">Tipo di Servizio</h3>
-        <p className="text-gray-600 mb-6">
+        <h3 className="text-primary font-semibold mb-2 text-xl">Tipo di Servizio</h3>
+        <p className="text-secondary mb-6">
           Scegli se vuoi il servizio completo di installazione o preferisci montare la pergola autonomamente
         </p>
 
@@ -287,40 +287,40 @@ export function Step7Package({ configuration, updateConfiguration, onValidationE
             return (
               <Card
                 key={pkg.id}
-                className={`cursor-pointer transition-all relative ${
+                className={`cursor-pointer transition-all relative product-card ${
                   selectedPackage === pkg.id
-                    ? "ring-2 ring-orange-500 bg-orange-50"
-                    : "hover:bg-gray-50 border-gray-200"
+                    ? "product-card-selected"
+                    : ""
                 }`}
                 onClick={() => setSelectedPackage(pkg.id)}
               >
                 {pkg.recommended && (
-                  <div className="absolute -top-2 left-4 bg-orange-500 text-white text-xs px-2 py-1 rounded">
+                  <div className="badge-recommended">
                     Consigliato
                   </div>
                 )}
                 <CardContent className="p-6">
                   <div className="flex items-start gap-4">
                     <div className="flex-shrink-0">
-                      <IconComponent className="w-8 h-8 text-orange-500" />
+                      <IconComponent className="w-8 h-8 text-accent-pink" />
                     </div>
                     <div className="flex-1">
-                      <h4 className="font-semibold text-gray-900 mb-2">{pkg.name}</h4>
-                      <p className="text-sm text-gray-600 mb-4">{pkg.description}</p>
+                      <h4 className="font-semibold text-primary mb-2">{pkg.name}</h4>
+                      <p className="text-sm text-secondary mb-4">{pkg.description}</p>
 
                       <div className="space-y-2 mb-4">
-                        <p className="text-sm font-medium text-gray-700">Include:</p>
+                        <p className="text-sm font-medium text-primary">Include:</p>
                         {pkg.features.map((feature, index) => (
                           <div key={index} className="flex items-start gap-2">
-                            <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                            <span className="text-sm text-gray-600">{feature}</span>
+                            <CheckCircle className="w-4 h-4 text-accent-pink mt-0.5 flex-shrink-0" />
+                            <span className="text-sm text-secondary">{feature}</span>
                           </div>
                         ))}
                       </div>
 
                       <div className="flex items-start gap-2">
                         <span className="text-sm">💡</span>
-                        <p className="text-sm text-gray-600 italic">{pkg.note}</p>
+                        <p className="text-sm text-secondary italic">{pkg.note}</p>
                       </div>
                     </div>
                   </div>
@@ -334,7 +334,7 @@ export function Step7Package({ configuration, updateConfiguration, onValidationE
       {/* Customer Information */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-gray-900">Dati di Contatto</CardTitle>
+          <CardTitle className="text-primary text-xl">Dati di Contatto</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid md:grid-cols-2 gap-4">
@@ -402,8 +402,8 @@ export function Step7Package({ configuration, updateConfiguration, onValidationE
 
           {/* Contact Preference Selection */}
           <div className="mt-6">
-            <Label className="text-base font-medium text-gray-900 mb-4 block">Preferenza di Contatto *</Label>
-            <p className="text-sm text-gray-600 mb-4">
+            <Label className="text-base font-medium text-primary mb-4 block">Preferenza di Contatto *</Label>
+            <p className="text-sm text-secondary mb-4">
               Come preferisci essere contattato per il preventivo e le informazioni sul tuo carport?
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -431,19 +431,19 @@ export function Step7Package({ configuration, updateConfiguration, onValidationE
                 return (
                   <Card
                     key={option.id}
-                    className={`cursor-pointer transition-all ${
+                    className={`cursor-pointer transition-all product-card ${
                       contactPreference === option.id
-                        ? "ring-2 ring-orange-500 bg-orange-50"
-                        : "hover:bg-gray-50 border-gray-200"
+                        ? "product-card-selected"
+                        : ""
                     }`}
                     onClick={() => setContactPreference(option.id)}
                   >
                     <CardContent className="p-4">
                       <div className="flex items-center gap-3">
-                        <IconComponent className="w-6 h-6 text-orange-500" />
+                        <IconComponent className="w-6 h-6 text-accent-pink" />
                         <div>
-                          <h4 className="font-medium text-gray-900">{option.name}</h4>
-                          <p className="text-sm text-gray-600">{option.description}</p>
+                          <h4 className="font-medium text-primary">{option.name}</h4>
+                          <p className="text-sm text-secondary">{option.description}</p>
                         </div>
                       </div>
                     </CardContent>
@@ -475,12 +475,12 @@ export function Step7Package({ configuration, updateConfiguration, onValidationE
               >
                 Accettazione Privacy *
               </Label>
-              <p className="text-sm text-gray-600 cursor-pointer">
+              <p className="text-sm text-secondary cursor-pointer">
                 Accetto l'informativa sulla privacy e autorizzo il trattamento dei miei dati personali per l'invio del
                 preventivo e per essere contattato in merito alla configurazione del carport. I dati saranno trattati in
                 conformità al GDPR (Regolamento UE 2016/679).
               </p>
-              <p className="text-xs text-gray-500 cursor-pointer">
+              <p className="text-xs text-secondary cursor-pointer">
                 Puoi consultare la nostra informativa completa sulla privacy sul nostro sito web.
               </p>
             </div>
@@ -500,11 +500,11 @@ export function Step7Package({ configuration, updateConfiguration, onValidationE
             !customerData.phone ||
             !privacyAccepted
           }
-          className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 text-lg"
+          className="button-primary px-8 py-3 text-lg"
         >
           {isSubmitting ? "Invio in corso..." : "Invia Configurazione"}
         </Button>
-        <p className="text-gray-600 text-sm mt-2">Riceverai un preventivo personalizzato via email</p>
+        <p className="text-secondary text-sm mt-2">Riceverai un preventivo personalizzato via email</p>
       </div>
     </div>
   )

@@ -117,7 +117,7 @@ export function Step5Colors({ configuration, updateConfiguration }: Step5Props) 
   if (loading) {
     return (
       <div className="text-center py-8">
-        <p className="text-gray-600">Caricamento colori disponibili...</p>
+        <p className="text-secondary">Caricamento colori disponibili...</p>
       </div>
     )
   }
@@ -126,7 +126,7 @@ export function Step5Colors({ configuration, updateConfiguration }: Step5Props) 
     // Changed condition from structureType to modelId
     return (
       <div className="text-center py-8">
-        <p className="text-gray-600">Seleziona prima il modello per vedere i colori disponibili.</p>{" "}
+        <p className="text-secondary">Seleziona prima il modello per vedere i colori disponibili.</p>{" "}
         {/* Updated message */}
       </div>
     )
@@ -135,15 +135,15 @@ export function Step5Colors({ configuration, updateConfiguration }: Step5Props) 
   return (
     <div className="space-y-8">
       <div className="text-center">
-        <p className="text-gray-800 text-lg">Seleziona il colore per la struttura</p>
-        <p className="text-gray-600 text-sm mt-2">Colori disponibili per il modello selezionato</p>{" "}
+        <p className="text-primary text-lg">Seleziona il colore per la struttura</p>
+        <p className="text-secondary text-sm mt-2">Colori disponibili per il modello selezionato</p>{" "}
         {/* Updated message */}
       </div>
 
       {Object.entries(groupedColors).map(([macroCategory, colors]) => (
         <Card key={macroCategory}>
           <CardHeader>
-            <CardTitle className="text-gray-900">{getMacroCategoryTitle(macroCategory)}</CardTitle>
+            <CardTitle className="text-primary">{getMacroCategoryTitle(macroCategory)}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
@@ -154,27 +154,27 @@ export function Step5Colors({ configuration, updateConfiguration }: Step5Props) 
                     key={color.id}
                     className={`cursor-pointer p-4 rounded-lg border-2 transition-all ${
                       selectedStructureColor === color.id
-                        ? "border-orange-500 bg-orange-50"
-                        : "border-gray-200 hover:border-green-300"
+                        ? "border-orange-500 bg-surface-beige"
+                        : "border-gray-200 hover:border-gray-300"
                     }`}
                     onClick={() => setSelectedStructureColor(color.id)}
                   >
                     <div className="w-full h-16 rounded-lg mb-2 border" style={{ backgroundColor: color.hex_value }} />
-                    <p className="text-sm font-medium text-gray-900 text-center mb-1">{color.name}</p>
+                    <p className="text-sm font-medium text-primary text-center mb-1">{color.name}</p>
                   </div>
                 ))}
             </div>
 
             {colors.some((color) => color.is_custom_choice) && (
               <div className="border-t pt-6 mt-6">
-                <h4 className="text-lg font-semibold text-gray-900 mb-4">
+                <h4 className="text-lg font-semibold text-primary mb-4">
                   {colors.find((color) => color.is_custom_choice)?.name || "Scelta Personalizzata"}
                 </h4>
                 {!showCustomInput ? (
                   <Button
                     variant="outline"
                     onClick={() => setShowCustomInput(true)}
-                    className="border-dashed border-2 border-gray-300 hover:border-green-400 text-gray-600 hover:text-green-700"
+                    className="border-dashed border-2 border-gray-300 hover:border-green-400 text-secondary hover:text-primary"
                   >
                     + Scegli colore personalizzato
                   </Button>
@@ -186,7 +186,7 @@ export function Step5Colors({ configuration, updateConfiguration }: Step5Props) 
                       onChange={(e) => setCustomColor(e.target.value)}
                       className="flex-1"
                     />
-                    <Button onClick={handleCustomColorSubmit} className="bg-green-600 hover:bg-green-700">
+                    <Button onClick={handleCustomColorSubmit} className="bg-primary hover:bg-primary">
                       Conferma
                     </Button>
                     <Button variant="outline" onClick={() => setShowCustomInput(false)}>
@@ -203,9 +203,9 @@ export function Step5Colors({ configuration, updateConfiguration }: Step5Props) 
       {availableColors.length === 0 && (
         <Card>
           <CardContent className="text-center py-8">
-            <p className="text-gray-600">Nessun colore disponibile per il modello selezionato.</p>{" "}
+            <p className="text-secondary">Nessun colore disponibile per il modello selezionato.</p>{" "}
             {/* Updated message */}
-            <p className="text-sm text-gray-500 mt-2">
+            <p className="text-sm text-secondary mt-2">
               Contatta l'amministratore per configurare i colori per questo modello. {/* Updated message */}
             </p>
           </CardContent>

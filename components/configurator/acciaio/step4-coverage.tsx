@@ -67,12 +67,12 @@ export function Step4Coverage({ configuration, updateConfiguration }: Step4Props
   }, [coverageTypes, selectedCoverage, updateConfiguration])
 
   if (loading) {
-    return <div className="text-center py-8 text-gray-600">Caricamento tipi di copertura...</div>
+    return <div className="text-center py-8 text-secondary">Caricamento tipi di copertura...</div>
   }
 
   if (coverageTypes.length === 0) {
     return (
-      <div className="text-center py-8 text-gray-600">
+      <div className="text-center py-8 text-secondary">
         <p>Nessun tipo di copertura disponibile per il tipo di struttura selezionato.</p>
         <p className="text-sm mt-2">Contatta l'amministratore per configurare i collegamenti.</p>
       </div>
@@ -81,10 +81,10 @@ export function Step4Coverage({ configuration, updateConfiguration }: Step4Props
 
   return (
     <div className="space-y-6">
-      <p className="text-gray-800 text-center">
+      <p className="text-primary text-center">
         Seleziona il tipo di copertura per il tuo carport
         {configuration.structureType && (
-          <span className="block text-sm text-gray-600 mt-1">Compatibile con: {configuration.structureType}</span>
+          <span className="block text-sm text-secondary mt-1">Compatibile con: {configuration.structureType}</span>
         )}
       </p>
 
@@ -93,7 +93,7 @@ export function Step4Coverage({ configuration, updateConfiguration }: Step4Props
           <Card
             key={coverage.id}
             className={`cursor-pointer transition-all hover:shadow-lg ${
-              selectedCoverage === coverage.id ? "ring-2 ring-orange-500 bg-orange-50" : "hover:bg-green-50"
+              selectedCoverage === coverage.id ? "ring-2 ring-accent-pink bg-surface-beige" : "hover:bg-surface-beige"
             }`}
             onClick={() => setSelectedCoverage(coverage.id)}
           >
@@ -107,8 +107,8 @@ export function Step4Coverage({ configuration, updateConfiguration }: Step4Props
                   target.src = getFallbackImageUrl("coverage")
                 }}
               />
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">{coverage.name}</h3>
-              <p className="text-gray-700 mb-3">{coverage.description}</p>
+              <h3 className="text-xl font-semibold text-primary mb-2">{coverage.name}</h3>
+              <p className="text-secondary mb-3">{coverage.description}</p>
             </CardContent>
           </Card>
         ))}

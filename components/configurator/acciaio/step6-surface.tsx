@@ -53,14 +53,14 @@ export function Step6Surface({ configuration, updateConfiguration }: Step6Props)
   }, [selectedSurface, updateConfiguration])
 
   if (loading) {
-    return <div className="text-center py-8 text-gray-600">Caricamento superfici...</div>
+    return <div className="text-center py-8 text-secondary">Caricamento superfici...</div>
   }
 
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <p className="text-gray-800">Scegli il tipo di superficie per il tuo carport</p>
-        {surfaceArea > 0 && <p className="text-gray-700 mt-2">Superficie da coprire: {surfaceArea.toFixed(1)} m²</p>}
+        <p className="text-primary">Scegli il tipo di superficie per il tuo carport</p>
+        {surfaceArea > 0 && <p className="text-secondary mt-2">Superficie da coprire: {surfaceArea.toFixed(1)} m²</p>}
       </div>
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -68,7 +68,7 @@ export function Step6Surface({ configuration, updateConfiguration }: Step6Props)
           <Card
             key={surface.id}
             className={`cursor-pointer transition-all hover:shadow-lg ${
-              selectedSurface === surface.id ? "ring-2 ring-orange-500 bg-orange-50" : "hover:bg-green-50"
+              selectedSurface === surface.id ? "ring-2 ring-accent-pink bg-surface-beige" : "hover:bg-surface-beige"
             }`}
             onClick={() => setSelectedSurface(surface.id)}
           >
@@ -82,8 +82,8 @@ export function Step6Surface({ configuration, updateConfiguration }: Step6Props)
                   target.src = getFallbackImageUrl("surface")
                 }}
               />
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">{surface.name}</h3>
-              <p className="text-gray-700 mb-3">{surface.description}</p>
+              <h3 className="text-xl font-semibold text-primary mb-2">{surface.name}</h3>
+              <p className="text-secondary mb-3">{surface.description}</p>
             </CardContent>
           </Card>
         ))}

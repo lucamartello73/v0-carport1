@@ -1,10 +1,10 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Card, CardContent } from "@/components/ui/card"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { fetchConfiguratorData, getImageUrlOrPlaceholder } from "@/lib/supabase/fetchConfiguratorData"
 import { getFallbackImageUrl } from "@/lib/utils/image-utils"
+import { ImageOff } from "lucide-react"
 import type { ConfigurationData } from "@/types/configuration"
 
 interface Step1Props {
@@ -32,7 +32,6 @@ export function Step1StructureType({ configuration, updateConfiguration }: Step1
   useEffect(() => {
     const loadStructureTypes = async () => {
       try {
-        // Usa helper centralizzato con filtro automatico materiale='acciaio'
         const { data, error } = await fetchConfiguratorData<StructureType>({
           material: 'acciaio',
           table: 'structure_types'
@@ -80,8 +79,8 @@ export function Step1StructureType({ configuration, updateConfiguration }: Step1
   return (
     <div className="space-y-8">
       <div className="text-center">
-        <p className="text-gray-800 text-lg">Seleziona il tipo di struttura in acciaio/alluminio</p>
-        <p className="text-gray-600 text-sm mt-2">Scegli tra le diverse soluzioni metalliche disponibili</p>
+        <h2 className="text-2xl font-bold text-primary mb-2">Seleziona il tipo di struttura in acciaio</h2>
+        <p className="text-secondary">Scegli tra le diverse soluzioni metalliche disponibili</p>
       </div>
 
       {isUpdating && (
@@ -90,30 +89,28 @@ export function Step1StructureType({ configuration, updateConfiguration }: Step1
         </div>
       )}
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {structureTypes.map((type) => (
-          <Card
-            key={type.id}
-            className={`cursor-pointer transition-all duration-300 hover:shadow-xl transform hover:-translate-y-1 ${
-              selectedType === type.id
-                ? "ring-2 ring-blue-500 bg-gradient-to-br from-blue-50 to-blue-100 shadow-lg"
-                : "hover:bg-gradient-to-br hover:from-blue-50 hover:to-blue-100"
-            }`}
-            onClick={() => setSelectedType(type.id)}
-          >
-            <CardContent className="p-6">
-              <div className="relative overflow-hidden rounded-lg mb-4">
+      <div className="product-grid">
+        {structureTypes.map((type) => {
+          const imageUrl = getImageUrlOrPlaceholder(type.image, 'structure') || getFallbackImageUrl("structure")
+          
+          return (
+            <div
+              key={type.id}
+              className={`product-card ${selectedType === type.id ? 'product-card-selected' : ''}`}
+              onClick={() => setSelectedType(type.id)}
+            >
+              <div className="product-image-container">
                 <img
-                  src={getImageUrlOrPlaceholder(type.image, 'structure') || getFallbackImageUrl("structure")}
+                  src={imageUrl}
                   alt={type.name}
-                  className="w-full h-48 object-cover transition-transform duration-300 hover:scale-105"
+                  className="product-image"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement
                     target.src = getFallbackImageUrl("structure")
                   }}
                 />
                 {selectedType === type.id && (
-                  <div className="absolute top-2 right-2 bg-blue-500 text-white rounded-full p-2">
+                  <div className="badge-selected">
                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                       <path
                         fillRule="evenodd"
@@ -124,32 +121,35 @@ export function Step1StructureType({ configuration, updateConfiguration }: Step1
                   </div>
                 )}
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">{type.name}</h3>
-              <p className="text-gray-700 mb-4 leading-relaxed">{type.description}</p>
 
-              {type.features && type.features.length > 0 && (
-                <div className="space-y-2">
-                  {type.features.map((feature, index) => (
-                    <div key={index} className="flex items-center text-sm text-gray-800">
-                      <svg className="w-4 h-4 text-blue-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                        <path
-                          fillRule="evenodd"
-                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                      {feature}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        ))}
+              <div className="product-content">
+                <h3 className="product-title">{type.name}</h3>
+                <p className="product-description">{type.description}</p>
+
+                {type.features && type.features.length > 0 && (
+                  <div className="space-y-2 mt-4">
+                    {type.features.map((feature, index) => (
+                      <div key={index} className="flex items-center text-sm text-primary">
+                        <svg className="w-4 h-4 text-accent-pink mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                          <path
+                            fillRule="evenodd"
+                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        {feature}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )
+        })}
       </div>
 
       {structureTypes.length === 0 && !isLoading && (
-        <div className="text-center py-12 text-gray-500">
+        <div className="text-center py-12 text-secondary">
           <p>Nessun tipo di struttura disponibile al momento.</p>
         </div>
       )}

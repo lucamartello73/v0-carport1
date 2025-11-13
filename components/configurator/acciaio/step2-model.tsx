@@ -72,14 +72,14 @@ export function Step2Model({ configuration, updateConfiguration }: Step2Props) {
   )
 
   if (loading) {
-    return <div className="text-center py-8 text-green-600">Caricamento modelli...</div>
+    return <div className="text-center py-8 text-primary">Caricamento modelli...</div>
   }
 
   if (filteredModels.length === 0 && configuration.structureTypeId) {
     return (
       <div className="text-center py-8">
-        <p className="text-orange-600 mb-4">Nessun modello disponibile per il tipo di struttura selezionato.</p>
-        <p className="text-gray-600 text-sm">Torna al passo precedente per selezionare un altro tipo di struttura.</p>
+        <p className="text-accent-pink mb-4">Nessun modello disponibile per il tipo di struttura selezionato.</p>
+        <p className="text-secondary text-sm">Torna al passo precedente per selezionare un altro tipo di struttura.</p>
       </div>
     )
   }
@@ -87,9 +87,9 @@ export function Step2Model({ configuration, updateConfiguration }: Step2Props) {
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <p className="text-green-700">Scegli il modello del tuo carport</p>
+        <p className="text-primary">Scegli il modello del tuo carport</p>
         {configuration.structureTypeId && (
-          <p className="text-sm text-gray-600 mt-2">
+          <p className="text-sm text-secondary mt-2">
             Modelli compatibili con il tipo di struttura selezionato ({filteredModels.length} disponibili)
           </p>
         )}
@@ -100,7 +100,7 @@ export function Step2Model({ configuration, updateConfiguration }: Step2Props) {
           <Card
             key={model.id}
             className={`cursor-pointer transition-all hover:shadow-lg ${
-              selectedModel === model.id ? "ring-2 ring-orange-500 bg-orange-50" : "hover:bg-green-50"
+              selectedModel === model.id ? "ring-2 ring-accent-pink bg-surface-beige" : "hover:bg-surface-beige"
             }`}
             onClick={() => handleModelSelect(model.id)}
           >
@@ -118,8 +118,8 @@ export function Step2Model({ configuration, updateConfiguration }: Step2Props) {
                   target.src = getFallbackImageUrl("model")
                 }}
               />
-              <h3 className="text-xl font-semibold text-green-800 mb-2">{model.name}</h3>
-              <p className="text-green-600 mb-3">{model.description}</p>
+              <h3 className="text-xl font-semibold text-primary mb-2">{model.name}</h3>
+              <p className="text-primary mb-3">{model.description}</p>
             </CardContent>
           </Card>
         ))}

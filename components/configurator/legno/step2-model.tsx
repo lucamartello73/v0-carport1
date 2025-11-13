@@ -26,13 +26,11 @@ export function Step2Model({ configuration, updateConfiguration }: Step2Props) {
   const [selectedModel, setSelectedModel] = useState(configuration.modelId || "")
   const [isUpdating, setIsUpdating] = useState(false)
 
-  // Fetch dinamico da Supabase con filtro 'legno' + structure_type_id
   const { data: allModels, isLoading, error } = useConfiguratorData<Model>({
     material: 'legno',
     table: 'models',
   })
 
-  // Filtra i modelli in base al structure_type_id selezionato
   const models = allModels.filter(
     (model) => model.structure_type_id === configuration.structureTypeId
   )
@@ -75,8 +73,8 @@ export function Step2Model({ configuration, updateConfiguration }: Step2Props) {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
           </svg>
         </div>
-        <h3 className="text-xl font-semibold text-gray-900 mb-2">Seleziona prima il tipo di struttura</h3>
-        <p className="text-gray-600">Torna allo step precedente per scegliere il tipo di struttura.</p>
+        <h3 className="text-xl font-semibold text-primary mb-2">Seleziona prima il tipo di struttura</h3>
+        <p className="text-secondary">Torna allo step precedente per scegliere il tipo di struttura.</p>
       </div>
     )
   }
@@ -89,11 +87,11 @@ export function Step2Model({ configuration, updateConfiguration }: Step2Props) {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
           </svg>
         </div>
-        <h3 className="text-xl font-semibold text-gray-900 mb-2">Nessun modello disponibile</h3>
-        <p className="text-gray-600">
+        <h3 className="text-xl font-semibold text-primary mb-2">Nessun modello disponibile</h3>
+        <p className="text-secondary">
           Non ci sono modelli disponibili per il tipo di struttura selezionato.
         </p>
-        <p className="text-sm text-gray-500 mt-2">
+        <p className="text-sm text-secondary mt-2">
           Torna indietro e seleziona un altro tipo di struttura.
         </p>
       </div>
@@ -103,8 +101,8 @@ export function Step2Model({ configuration, updateConfiguration }: Step2Props) {
   return (
     <div className="space-y-8">
       <div className="text-center">
-        <p className="text-gray-800 text-lg">Scegli il modello di copertura</p>
-        <p className="text-gray-600 text-sm mt-2">
+        <h2 className="text-2xl font-bold text-primary mb-2">Scegli il modello di copertura</h2>
+        <p className="text-secondary">
           Seleziona il design che meglio si adatta al tuo stile
         </p>
       </div>
@@ -115,70 +113,64 @@ export function Step2Model({ configuration, updateConfiguration }: Step2Props) {
         </div>
       )}
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="product-grid">
         {models.map((model) => {
           const imageUrl = getImageUrlOrPlaceholder(model.image_url)
           const description = getDescriptionOrFallback(model.description)
           
           return (
-            <Card
+            <div
               key={model.id}
-              className={`cursor-pointer transition-all duration-300 hover:shadow-xl transform hover:-translate-y-1 ${
-                selectedModel === model.id
-                  ? "ring-2 ring-[#008f4c] bg-gradient-to-br from-green-50 to-emerald-50 shadow-lg"
-                  : "hover:bg-gradient-to-br hover:from-green-50 hover:to-emerald-50"
-              }`}
+              className={`product-card ${selectedModel === model.id ? 'product-card-selected' : ''}`}
               onClick={() => setSelectedModel(model.id)}
             >
-              <CardContent className="p-6">
-                <div className="relative overflow-hidden rounded-lg mb-4">
-                  {imageUrl ? (
-                    <img
-                      src={imageUrl}
-                      alt={model.name}
-                      className="w-full h-48 object-cover transition-transform duration-300 hover:scale-105"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement
-                        target.style.display = 'none'
-                        const parent = target.parentElement
-                        if (parent) {
-                          const placeholder = document.createElement('div')
-                          placeholder.className = 'flex items-center justify-center w-full h-48 bg-gray-100'
-                          parent.appendChild(placeholder)
-                        }
-                      }}
-                    />
-                  ) : (
-                    <div className="flex items-center justify-center w-full h-48 bg-gray-100">
-                      <ImageOff className="w-12 h-12 text-gray-400" />
-                    </div>
-                  )}
-                  {selectedModel === model.id && (
-                    <div className="absolute top-2 right-2 bg-[#008f4c] text-white rounded-full p-2">
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path
-                          fillRule="evenodd"
-                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    </div>
-                  )}
-                </div>
-
-                <h3 className="text-xl font-bold text-gray-900 mb-3">{model.name}</h3>
-                <p className="text-gray-700 mb-4 leading-relaxed">{description}</p>
-
-                {model.base_price > 0 && (
-                  <div className="mt-4 pt-4 border-t border-gray-200">
-                    <p className="text-sm text-gray-600">Supplemento modello:</p>
-                    <p className="text-lg font-bold text-[#008f4c]">
-                      +€{model.base_price.toFixed(2)}
-                    </p>
+              <div className="product-image-container">
+                {imageUrl ? (
+                  <img
+                    src={imageUrl}
+                    alt={model.name}
+                    className="product-image"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement
+                      target.style.display = 'none'
+                      const parent = target.parentElement
+                      if (parent) {
+                        const placeholder = document.createElement('div')
+                        placeholder.className = 'flex items-center justify-center w-full h-full bg-gray-100'
+                        parent.appendChild(placeholder)
+                      }
+                    }}
+                  />
+                ) : (
+                  <div className="flex items-center justify-center w-full h-full bg-gray-100">
+                    <ImageOff className="w-12 h-12 text-gray-400" />
                   </div>
                 )}
-              </CardContent>
-            </Card>
+                {selectedModel === model.id && (
+                  <div className="badge-selected">
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path
+                        fillRule="evenodd"
+                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                )}
+              </div>
+
+              <div className="product-content">
+                <h3 className="product-title">{model.name}</h3>
+                <p className="product-description">{description}</p>
+
+                {model.base_price > 0 && (
+                  <div className="product-price-container">
+                    <p className="text-sm text-secondary">Supplemento modello:</p>
+                    <p className="product-price">+€{model.base_price.toFixed(2)}</p>
+                  </div>
+                )}
+              </div>
+            </div>
           )
         })}
       </div>
